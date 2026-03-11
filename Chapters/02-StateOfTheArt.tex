@@ -1,0 +1,59 @@
+% !TEX root = ../Thesis.tex
+
+\chapter{Stato dell'Arte}
+
+Nel corso degli ultimi decenni l’ingegneria del software è cambiata in modo sostanziale, sia dal punto di vista metodologico sia per quanto riguarda gli strumenti utilizzati nello sviluppo delle applicazioni. I primi modelli organizzativi, come il modello a cascata, erano basati su una successione rigida e sequenziale delle fasi di progetto. Con il tempo, tuttavia, tale impostazione ha mostrato diversi limiti, soprattutto in contesti caratterizzati da requisiti variabili e tempi di rilascio sempre più ridotti.
+
+La progressiva diffusione di approcci iterativi e incrementali ha quindi spostato l’attenzione dalla sola consegna del prodotto finale alla gestione continua della qualità. Le metodologie Agile si inseriscono in questa evoluzione, proponendo cicli di sviluppo brevi, rilascio frequente di versioni intermedie e un costante confronto con il cliente.
+
+In tale contesto, la qualità non è più un'attività relegata alla fase finale di testing, ma diventa un elemento trasversale all’intero ciclo di vita dell’applicazione. Di conseguenza, si è rafforzata l’adozione di pratiche orientate all’automazione dei test e dei processi di build, con l’intento di ridurre l’introduzione di difetti, migliorare la manutenibilità del codice e rendere più affidabili i rilasci.
+
+\section{Test-Driven Development (TDD)}
+Il Test-Driven Development (TDD) nasce nell’ambito dell’Extreme Programming ed è stato formalizzato da Kent Beck \cite{beck2003}. L’idea centrale consiste nello scrivere i test prima del codice applicativo. Questo rovesciamento rispetto alla sequenza tradizionale obbliga lo sviluppatore a chiarire fin dall’inizio quale debba essere il comportamento osservabile del sistema, prima ancora di definirne l’implementazione.
+
+Il ciclo operativo del TDD è composto da tre fasi:
+\begin{itemize}
+	\item \textbf{Red}: si scrive un test relativo a una nuova funzionalità, il test fallisce, poiché la funzionalità non è ancora implementata.
+	\item \textbf{Green}: si implementa il codice strettamente necessario per soddisfare il test.
+	\item \textbf{Refactor}: si riorganizza il codice migliorandone la struttura interna, senza modificarne il comportamento verificato dai test.
+\end{itemize}
+
+La necessità di rendere il codice verificabile fin dall’inizio tende a favorire una struttura più modulare e una maggiore separazione delle responsabilità, riducendo il rischio di regressioni nelle fasi evolutive.
+
+La letteratura evidenzia come il TDD contribuisca ad aumentare la copertura dei test e a rendere più espliciti i requisiti funzionali, poiché l’attenzione è rivolta al comportamento osservabile del sistema. L’applicazione del metodo richiede tuttavia una certa disciplina e può comportare, soprattutto nelle fasi iniziali, un rallentamento percepito dello sviluppo. Inoltre, quando parte del codice è generata automaticamente tramite strumenti di scaffolding, l’approccio test-first può risultare meno immediato. In questi casi emerge una questione rilevante per questa tesi: fino a che punto la generazione automatica del codice è compatibile con uno sviluppo effettivamente guidato dai test?
+
+\section{Behavior-Driven Development (BDD)}
+
+Il Behavior-Driven Development (BDD) può essere interpretato come un’estensione del TDD con l’obiettivo di colmare il divario comunicativo tra sviluppatori e clienti non tecnici. Il BDD propone la formalizzazione dei requisiti sotto forma di scenari scritti in linguaggio naturale. Una delle sintassi più diffuse è Gherkin, che utilizza lo schema:
+
+\begin{minted}{gherkin}
+  Given una condizione iniziale \\
+  When si verifica un’azione \\
+  Then si osserva un risultato atteso
+\end{minted}
+
+Tali descrizioni vengono poi collegate al codice eseguibile attraverso framework come Cucumber, che consentono di trasformare gli scenari in test automatizzati. Rispetto al TDD, il BDD opera quindi a un livello di astrazione più elevato, concentrandosi sul comportamento complessivo del sistema e sull’interazione tra i suoi componenti.
+
+In applicazioni basate su architetture REST (o su microservizi), questo approccio si presta in modo particolare alla validazione di scenari end-to-end e dei vincoli di sicurezza. L’efficacia del BDD, tuttavia, è strettamente legata al contesto: in ambienti caratterizzati da un dialogo costante tra sviluppatori e clienti può facilitare l’allineamento sui requisiti, mentre in progetti individuali o di piccole dimensioni il beneficio può risultare più limitato.
+
+\section{Continuous Integration}
+
+Con l’aumento della complessità dei sistemi software, è emersa l’esigenza di automatizzare non solo il testing, ma l’intero processo di integrazione e rilascio. La Continuous Integration (CI) consiste nell’integrare frequentemente le modifiche in un repository condiviso, attivando automaticamente procedure di compilazione ed esecuzione dei test. In questo modo è possibile intercettare rapidamente eventuali errori e ridurre l’accumulo di conflitti tra contributi differenti.
+
+In una pipeline CI tipica, le fasi di compilazione, testing, analisi statica e generazione degli artefatti sono completamente automatizzate e ripetibili. L’adozione di tecnologie di containerizzazione, come Docker, contribuisce ulteriormente a garantire la coerenza tra ambiente di sviluppo, testing e produzione.
+
+L’automazione sistematica dei processi rappresenta uno degli elementi centrali del paradigma DevOps, che mira a ridurre la separazione tradizionale tra sviluppo e gestione operativa. In questo contesto, la presenza di una suite di test solida e affidabile non è un elemento opzionale, ma una condizione necessaria: senza test automatici adeguati, l’integrazione continua perderebbe gran parte del suo valore operativo.
+
+\section{Generatori di applicazioni full-stack}
+
+Negli ultimi anni si sono diffusi strumenti in grado di generare automaticamente applicazioni complete a partire da un modello di dominio. L’obiettivo principale di questi generatori è ridurre il tempo dedicato alle attività preliminari di configurazione e fornire una struttura coerente e standard rispetto a pratiche consolidate.
+
+Questi strumenti non si limitano alla produzione del codice applicativo, ma includono spesso configurazioni per la gestione della build, l’organizzazione dei livelli applicativi e, in alcuni casi, il supporto a meccanismi di testing e automazione.
+
+Un esempio di questi strumenti è JHipster, generatore open source di cui parlerò più approfonditamente nel prossimo capitolo.
+
+\section{Motivazione del presente lavoro}
+
+I generatori di applicazioni vengono generalmente valutati in termini di produttività, riduzione del codice boilerplate e aderenza a standard consolidati.
+
+Il presente lavoro si propone di valutare in modo sistematico la compatibilità tra generazione automatica del codice e metodologie di sviluppo orientate ai test e all’integrazione continua, specialmente nel caso di JHipster.

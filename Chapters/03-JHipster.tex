@@ -1,0 +1,151 @@
+% !TEX root = ../Thesis.tex
+
+\chapter{JHipster: Architettura e fondamenti teorici}
+
+JHipster è una piattaforma open source progettata per la generazione di applicazioni web moderne full-stack. Il suo obiettivo è fornire una base pronta all’uso che integri tecnologie consolidate lato backend e frontend. Nel tempo, il progetto si è evoluto fino a diventare un ecosistema strutturato, mantenuto da una vasta comunità di sviluppatori.
+
+Attraverso una interfaccia a riga di comando, si risponde a una serie di domande che definiscono le caratteristiche principali dell’applicazione: tipologia di architettura (monolite o microservizi), sistema di autenticazione, database, strumenti di build e framework frontend, e alcuni strumenti addizionali. Si può in seguito, mediante la definizione di un modello di dominio tramite JDL (JHipster Domain Language), modellare entità, relazioni e vincoli in modo strutturato.
+
+JHipster genera automaticamente un’applicazione completa, comprensiva di backend REST, frontend SPA (Single Page Application), sistema di autenticazione, configurazione del database, test unitari e di integrazione, e strumenti di containerizzazione.
+
+Le informazioni relative all'installazione e l'utilizzo di JHipster possono essere trovate sul loro sito ufficiale \url{www.jhipster.tech}. I progetti generati con JHipster supportano nativamente gli IDE più diffusi, come Eclipse usato in questa tesi, e la loro documentazione spiega come utilizzare tutti i componenti integrati dal framework.
+
+\section{Architettura backend: il ruolo di Spring Boot}
+
+Il backend generato da JHipster utilizza Spring Boot, un framework dell'ecosistema Spring progettato per semplificare la configurazione e l’avvio di applicazioni Java. Spring Boot riduce la complessità di Spring tramite il principio di \textit{convention over configuration}, fornendo configurazioni predefinite che consentono di avviare rapidamente un’applicazione funzionante.
+
+L’architettura backend risultante è tipicamente stratificata in più livelli. Il \textit{domain layer} contiene le entità JPA che rappresentano il modello dati. Il \textit{repository layer}, basato su Spring Data JPA, fornisce l’accesso ai dati mediante interfacce che estendono \texttt{JpaRepository}. Il \textit{service layer} incapsula la logica di business, mentre il \textit{web layer} espone le API REST.
+
+Questa separazione rende il codice più facilmente testabile, poiché consente di isolare la logica applicativa dal livello di persistenza e dal livello di presentazione. Dal punto di vista del TDD, la presenza di un service layer ben definito rappresenta un punto di ingresso naturale per la scrittura di test unitari.
+
+\subsection{Profili di Spring Boot generati}
+JHipster genera automaticamente diversi profili per Spring Boot. I profili permettono di definire configurazioni differenti dell’applicazione a seconda dell’ambiente di esecuzione.
+
+In generale, i profili generati automaticamente da JHipster sono già configurati in modo adeguato per la maggior parte dei casi d’uso. Tuttavia, durante lo sviluppo di un’applicazione reale è spesso necessario personalizzare alcune configurazioni. Le modifiche più comuni riguardano principalmente:
+
+\begin{itemize}
+	\item la configurazione del database, ad esempio sostituendo il database embedded utilizzato in sviluppo con un database relazionale esterno;
+	\item parametri di logging differenti tra ambiente di sviluppo e produzione;
+	\item configurazioni di sicurezza e gestione delle sessioni;
+	\item parametri di connessione a servizi esterni, come sistemi di messaggistica o storage.
+\end{itemize}
+
+JHipster genera un file di configurazione generale, \texttt{application.yml}, che contiene le proprietà comuni dell’applicazione, e due profili principali: \texttt{dev} e \texttt{prod}.
+
+\begin{itemize}
+	\item \textbf{application.yml}: file di configurazione base, comune a tutti gli ambienti. Contiene le proprietà generali dell’applicazione e viene integrato o sovrascritto dai profili specifici.
+	
+	\item \textbf{dev}: utilizzato durante lo sviluppo locale. Include configurazioni per logging più verboso, strumenti di sviluppo e un database locale.
+	
+	\item \textbf{prod}: destinato all’ambiente di produzione. Include configurazioni con maggiore attenzione a prestazioni, sicurezza e integrazione con servizi esterni.
+\end{itemize}
+
+Nel caso del profilo \texttt{dev}, JHipster attiva inoltre automaticamente il profilo accessorio \texttt{api-docs}, utile per l’esposizione della documentazione delle API durante lo sviluppo.
+
+\section{Persistenza e gestione delle relazioni}
+
+La persistenza dei dati è affidata a Spring Data JPA e Hibernate. Le entità vengono annotate secondo lo standard JPA e mappate su tabelle relazionali.
+
+Uno degli aspetti più rilevanti è la gestione automatica delle relazioni tra entità, incluse relazioni molti-a-molti. Tramite JDL (o CLI interattiva) è possibile definire in modo dichiarativo attributi, vincoli e relazioni (OneToOne, OneToMany, ManyToOne, ManyToMany), DTO, service class, paginazione, filtraggio. Il generatore produce automaticamente le annotazioni JPA appropriate e, nel caso delle relazioni molti-a-molti, crea la tabella di join necessaria.
+
+La Figura \ref{fig:jpa-entity} mostra un esempio di entità generata automaticamente dal framework.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{Figures/Tag-entity.JPG}
+	\caption{Esempio di entità JPA generata da JHipster}
+	\label{fig:jpa-entity}
+\end{figure}
+
+Le annotazioni come \texttt{@Entity}, \texttt{@Table}, \texttt{@Id} e \texttt{@GeneratedValue} permettono di definire la mappatura tra oggetti Java e tabelle del database. Questo consente a Spring Data JPA di generare automaticamente molte delle query necessarie per l’accesso ai dati. Le interfacce repository estendono infatti \texttt{JpaRepository}, che fornisce automaticamente implementazioni per le operazioni CRUD più comuni.
+
+È inoltre possibile definire query semplicemente dichiarando metodi con nomi specifici all'interno dell'interfaccia repository. Spring Data JPA analizza la firma del metodo e genera automaticamente la query SQL corrispondente.
+
+La Figura \ref{fig:tag-repository} mostra un esempio di repository per l’entità \texttt{Tag}. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Figures/tag-repository.JPG}
+	\caption{Esempio di repository Spring Data JPA generato da JHipster}
+	\label{fig:tag-repository}
+\end{figure}
+
+\section{Architettura frontend: Angular}
+
+JHipster supporta diversi framework frontend, tra cui: Angular, React, Vue. In questo progetto viene utilizzato Angular. L’applicazione generata da JHipster è una Single Page Application (SPA) che comunica con il backend esclusivamente tramite API REST.
+
+Angular è un framework strutturato basato su TypeScript, con Angular è possibile realizzare componenti, servizi e direttive che cooperano tra loro per costruire applicazioni client complesse. La comunicazione con il backend avviene tramite il modulo \texttt{HttpClient}, che gestisce richieste asincrone e serializzazione JSON.
+
+Il frontend generato include:
+
+\begin{itemize}
+	\item componenti CRUD per ciascuna entità;
+	\item servizi dedicati alla comunicazione con le API REST;
+	\item gestione del routing e delle guardie di autenticazione;
+	\item integrazione con il sistema di sicurezza JWT.
+\end{itemize}
+\begin{figure}[H]
+\dirtree{%
+	.1 note/.
+	.2 note.model.ts.
+	.2 note.routes.ts.
+	.2 note.test-samples.ts.
+	.2 delete/.
+	.3 note-delete-dialog.component.html.
+	.3 note-delete-dialog.component.spec.ts.
+	.3 note-delete-dialog.component.ts.
+	.2 detail/.
+	.3 note-detail.component.html.
+	.3 note-detail.component.spec.ts.
+	.3 note-detail.component.ts.
+	.2 list/.
+	.3 note.component.html.
+	.3 note.component.spec.ts.
+	.3 note.component.ts.
+	.2 route/.
+	.3 note-routing-resolve.service.spec.ts.
+	.3 note-routing-resolve.service.ts.
+	.2 service/.
+	.3 note.service.spec.ts.
+	.3 note.service.ts.
+	.2 update/.
+	.3 note-form.service.spec.ts.
+	.3 note-form.service.ts.
+	.3 note-update.component.html.
+	.3 note-update.component.spec.ts.
+	.3 note-update.component.ts.
+}
+	\caption{Estratto dell’albero del front-end generato per una entità}
+\label{fig:entity-ts-tree}
+\end{figure}
+La struttura evidenzia come JHipster organizzi automaticamente i componenti dell'interfaccia separando le responsabilità: la cartella \texttt{list} contiene i componenti per la visualizzazione delle entità, \texttt{detail} per la visualizzazione dei dettagli, \texttt{update} include i componenti e i servizi necessari alla creazione e modifica dei dati, mentre le cartelle \texttt{service} e \texttt{route} raccolgono rispettivamente la logica di comunicazione con il backend e quella di gestione del routing.
+
+Dal punto di vista del testing, Angular supporta test unitari mediante strumenti come Jest, mentre per i test end-to-end JHipster integra Cypress.
+
+\section{Autenticazione e autorizzazione}
+
+La sicurezza dell’applicazione è gestita tramite Spring Security. JHipster consente di scegliere tra vari metodi di autenticazione, i più semplici e supportati out of the box sono autenticazione basata sulla sessione e tramite JSON Web Tokens (JWT).
+
+La documentazione ufficiale di JHipster illustra inoltre come implementare e integrare gli altri metodi di autenticazione più complessi, e come renderli tutti più sicuri per l'ambiente di produzione.
+
+Il sistema inoltre implementa ruoli predefiniti come \texttt{ROLE\_USER} e \texttt{ROLE\_ADMIN} per gli utenti. Le restrizioni di accesso vengono applicate sia a livello di endpoint REST sia a livello di frontend tramite guardie di routing.
+
+\section{Supporto ai test}
+
+Uno degli elementi distintivi di JHipster è la generazione automatica di test backend e frontend.
+
+Per il backend vengono prodotti test basati su JUnit, Spring Test, MockMvc e Mockito. Ogni entità include test di integrazione per le operazioni CRUD, verifiche sulle validazioni e controlli sui codici di risposta HTTP.
+
+Per il frontend Angular vengono generati test unitari per i componenti e servizi, e configurazioni per test end-to-end con Cypress.
+
+Cypress è uno strumento moderno per test E2E che esegue il browser in modo controllato e consente di simulare interazioni. I test Cypress verificano il comportamento complessivo dell’applicazione, dall’interfaccia fino alla persistenza dei dati.
+
+Inoltre, al momento della creazione dell'applicazione, è possibile specificare l'utilizzo di test di performance tramite Gatling e test BDD tramite Cucumber.
+
+Nel prossimo capitolo verranno analizzati più nel dettaglio i test generati automaticamente da JHipster e le modalità con cui è possibile estenderli per supportare un processo di sviluppo basato sul paradigma Test Driven Development (TDD).
+
+\section{Containerizzazione e integrazione DevOps}
+
+JHipster integra nativamente configurazioni Docker e file \texttt{docker-compose} per l’avvio coordinato di backend, frontend e database, con la possibilità di creazione tramite CLI. È inoltre possibile generare configurazioni per Kubernetes e file di pipeline per strumenti di integrazione GitHub Actions, GitLab CI o Jenkins.
+
+La documentazione ufficiale di JHipster fornisce una spiegazione dettagliata su come realizzare il proprio Docker compose e su come utilizzare i docker compose pregenerati per gli strumenti addizionali come Sonar.

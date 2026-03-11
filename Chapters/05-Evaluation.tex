@@ -1,0 +1,80 @@
+% !TEX root = ../Thesis.tex
+
+\chapter{Valutazione critica del caso di studio}
+\label{cap:evaluation}
+
+Questo capitolo interpreta criticamente i risultati emersi nel caso di studio, con l’obiettivo di rispondere alla domanda di ricerca della tesi: in che misura un framework di generazione full-stack come JHipster supporta concretamente l’adozione di metodologie orientate alla qualità del software, in particolare Test-Driven Development (TDD), Behavior-Driven Development (BDD) e Continuous Integration (CI)?
+
+L’analisi svolta nei capitoli precedenti mostra che JHipster non impone una metodologia di sviluppo specifica, ma fornisce una base architetturale e tecnologica che rende relativamente agevole l’introduzione di pratiche di testing multilivello e di automazione del ciclo di build e verifica.
+
+\section{Valutazione del supporto al Test-Driven Development}
+\label{sec:evaluation-tdd}
+
+Dal punto di vista del Test-Driven Development, JHipster offre un contesto favorevole soprattutto in termini di testabilità strutturale. L’architettura generata separa chiaramente dominio, persistenza, service layer, controller REST e frontend, permettendo di individuare precisione i punti in cui introdurre logica applicativa e test mirati. Questa organizzazione rende più semplice la scrittura di test di integrazione e facilita anche il refactoring, poiché ogni livello mantiene responsabilità ben definite.
+
+Un primo elemento positivo è rappresentato dalla suite iniziale di test generata automaticamente dal framework. Tali test, pur non nascendo da un processo TDD in senso stretto, forniscono una rete di sicurezza immediata sulle operazioni CRUD, sulle validazioni di base, sulla serializzazione JSON e sul comportamento degli endpoint REST. In pratica, il progetto dispone fin dall’inizio di un primo insieme di verifiche che riduce il rischio di errori infrastrutturali e semplifica l’evoluzione successiva dell’applicazione. Il TDD non si applica alla nascita del progetto, ma si colloca soprattutto nella sua evoluzione, quando il comportamento standard generato dal framework non è più sufficiente a soddisfare i requisiti del dominio. Nel complesso, si può affermare che JHipster non sia un framework \emph{TDD-first}, ma che fornisca una base fortemente predisposta alla testabilità.
+
+\todo{Inserire qui un dato quantitativo sul numero di test generati automaticamente rispetto a quelli aggiunti manualmente durante il caso di studio.}
+
+\section{Valutazione del supporto al Behavior-Driven Development e E2E}
+\label{sec:evaluation-bdd}
+
+Per quanto riguarda il Behavior-Driven Development, il supporto offerto da JHipster è meno diretto rispetto a quello osservato per il testing di integrazione e per la CI. Il framework non genera automaticamente una suite significativa di scenari comportamentali, ma la struttura del progetto e l’integrazione con Spring Boot rendono comunque possibile l’adozione di strumenti come Cucumber senza particolari ostacoli architetturali.
+
+Nel caso di studio, il BDD ha avuto soprattutto un ruolo complementare. Da un lato, ha mostrato la fattibilità dell’integrazione con Cucumber; dall’altro, ha evidenziato che il beneficio di tale approccio dipende fortemente dal contesto organizzativo. In un progetto sviluppato individualmente, infatti, il valore aggiunto del BDD come linguaggio condiviso tende a ridursi.
+
+Una considerazione analoga vale per i test end-to-end con Cypress. Pur non coincidenti con il BDD, essi condividono l’attenzione verso il comportamento osservabile del sistema e consentono di verificare il corretto funzionamento dell’applicazione dal punto di vista dell’utente finale. Nel caso di studio, i test E2E si sono rivelati particolarmente utili dopo la personalizzazione dell’interfaccia relativa alle note, poiché i test generati automaticamente non risultavano più pienamente aderenti al comportamento reale della UI.
+
+Nel complesso, JHipster risulta compatibile con il BDD e con i test end-to-end, ma richiede una scelta metodologica consapevole e un intervento manuale maggiore rispetto ai livelli di test già scaffolded dal framework.
+
+\section{Valutazione del supporto alla Continuous Integration}
+\label{sec:evaluation-ci}
+
+L’ambito in cui JHipster mostra il supporto più solido è probabilmente quello della Continuous Integration. Il framework genera infatti un progetto già compatibile con strumenti di build, testing, containerizzazione e packaging moderni, riducendo notevolmente il costo iniziale necessario per costruire un processo di verifica automatizzato.
+
+Nel caso di studio, questa predisposizione ha permesso di realizzare una pipeline Jenkins locale articolata su più livelli di controllo: esecuzione di test unitari e di integrazione, pubblicazione di report JUnit e JaCoCo, generazione di report Cucumber, integrazione di SonarQube per l’analisi statica, esecuzione opzionale di PIT e Gatling, costruzione dell’immagine Docker e pubblicazione in un registry locale. Il risultato è un processo di qualità completo, che va ben oltre la semplice automazione della build.
+
+Il contributo di JHipster risulta particolarmente evidente proprio in questo ambito: il framework non fornisce una pipeline definitiva pronta per ogni scenario, ma mette a disposizione una base tecnica molto favorevole all’automazione, sulla quale è possibile costruire un processo CI coerente, modulare e sostenibile anche in un progetto di dimensioni contenute.
+
+\todo{Inserire qui un riepilogo sintetico dei risultati della pipeline: coverage finale, esito del Quality Gate, mutation score PIT, eventuali report pubblicati e numero totale di stage principali.}
+
+\section{Sintesi critica del sistema di testing}
+\label{sec:evaluation-testing-system}
+
+Uno degli aspetti più rilevanti emersi dal caso di studio è la possibilità di costruire, a partire da uno scaffolding generato automaticamente, un sistema di testing stratificato e coerente. I test di integrazione hanno verificato il comportamento delle API REST e della persistenza; i test frontend con Jest hanno coperto la logica lato client; gli scenari Cucumber hanno formalizzato alcuni comportamenti ad alto livello; i test end-to-end con Cypress hanno validato il comportamento complessivo del sistema; infine, mutation testing e analisi statica hanno aggiunto una valutazione qualitativa della robustezza della suite di test e della qualità del codice.
+
+Il valore di questo sistema non risiede soltanto nella quantità di strumenti integrati, ma nella loro complementarità. I livelli di test più rapidi intercettano regressioni frequenti e problemi locali; quelli più costosi vengono invece riservati a scenari funzionali più significativi o a fasi specifiche della pipeline. In questo senso, il caso di studio mostra che JHipster non solo permette l’integrazione di più livelli di test, ma rende anche relativamente naturale il loro inserimento in un processo automatizzato di build e verifica.
+
+\todo{Inserire una tabella o un diagramma riassuntivo dei livelli di test adottati, con indicazione di obiettivo, strumento e fase della pipeline in cui vengono eseguiti.}
+
+Un punto di forza riguarda la predisposizione all’automazione. La compatibilità con Docker, Maven, Jenkins, SonarQube e altri strumenti DevOps rende JHipster particolarmente adatto a essere inserito in pipeline di qualità anche piuttosto articolate. Nel caso di studio, ciò ha consentito di costruire un processo CI locale completo senza dover reingegnerizzare profondamente la struttura del progetto.
+
+\section{Limiti osservati}
+\label{sec:evaluation-limits}
+
+Accanto ai vantaggi, il caso di studio ha evidenziato anche alcuni limiti.
+
+Un limite riguarda la qualità semantica dei test generati automaticamente. Sebbene essi siano utili come prima rete di sicurezza, verificano soprattutto aspetti infrastrutturali o CRUD e non coprono in modo automatico i vincoli di business più interessanti. Esiste quindi il rischio di sopravvalutare il livello reale di qualità del progetto se ci si limita ai test scaffolded senza introdurre verifiche di dominio più significative.
+
+Una seconda criticità riguarda il frontend. La generazione automatica dell’interfaccia è molto efficace finché il progetto rimane vicino al modello CRUD standard proposto dal framework. Quando però la UI viene personalizzata in modo sostanziale, come nel caso della gestione delle note del progetto sviluppato, i test jest e E2E generati automaticamente diventano meno aderenti al comportamento effettivo dell’applicazione e devono essere adattati o riscritti.
+
+\section{Limiti dello studio e minacce alla validità}
+\label{sec:evaluation-validity}
+
+Le conclusioni tratte nel presente lavoro devono essere interpretate alla luce di alcune limitazioni metodologiche, legate sia alla natura del caso di studio sia agli indicatori utilizzati per valutarne i risultati.
+
+In primo luogo, il progetto sviluppato rappresenta un caso di studio di complessità intermedia. L’applicazione include relazioni tra entità, vincoli di proprietà dei dati, personalizzazioni rispetto allo scaffolding standard e una pipeline di testing e CI relativamente articolata. Tuttavia, non si tratta di un sistema enterprise di larga scala né di un’architettura distribuita su più servizi. Di conseguenza, i risultati osservati non possono essere generalizzati automaticamente a tutti i contesti applicativi.
+
+\todo{Inserire una breve caratterizzazione quantitativa del progetto: numero di entità, classi principali, righe di codice backend/frontend, numero totale di test, numero di commit oppure ampiezza temporale dello sviluppo.}
+
+Un secondo elemento riguarda l’ambiente sperimentale. La pipeline è stata realizzata in un’infrastruttura locale basata su Docker, Jenkins, SonarQube e registry privato. Questa scelta ha il vantaggio della riproducibilità e del controllo completo dell’ambiente, ma potrebbe non riflettere pienamente la complessità organizzativa e operativa di pipeline cloud-based o integrate in ecosistemi aziendali più strutturati.
+
+Dal punto di vista della validità esterna, va inoltre considerato che il caso di studio utilizza una configurazione specifica di JHipster: architettura monolitica, frontend Angular, autenticazione JWT e database SQL. Configurazioni differenti, ad esempio basate su microservizi, gateway o framework frontend alternativi, potrebbero produrre risultati almeno in parte diversi. Anche l’uso di H2 in sviluppo e MySQL in produzione rappresenta un possibile fattore di variabilità.
+
+Dal punto di vista della validità costruttiva, la valutazione si basa su metriche come code coverage, mutation score e indicatori di qualità statica del codice. Sebbene tali metriche forniscano evidenze quantitative importanti, esse non esauriscono il concetto di qualità del software. Una copertura elevata non garantisce automaticamente l’efficacia dei test; un mutation score elevato non misura direttamente la comprensibilità del codice, la qualità del design o la manutenibilità architetturale di lungo periodo. Le metriche utilizzate devono quindi essere lette come indicatori complementari e non come misure esaustive della qualità.
+
+\todo{Inserire una tabella finale con coverage, mutation score, numero totale di test e principali risultati SonarQube.}
+
+Un’ulteriore limitazione è legata al fatto che il progetto è stato sviluppato in modo individuale. Questo semplifica l’analisi e il controllo del caso di studio, ma riduce la possibilità di osservare pienamente alcuni benefici tipici del BDD e della CI in contesti collaborativi, dove la condivisione dei requisiti, la code review e l’automazione del processo assumono un ruolo ancora più rilevante.
+
+Nel complesso, tali limiti non invalidano i risultati ottenuti, ma suggeriscono di interpretarli come evidenze contestualizzate. Il contributo del caso di studio è quindi prevalentemente valutativo ed esplorativo: esso mostra in modo concreto come la generazione automatica del codice possa convivere con pratiche orientate alla qualità, senza pretendere di formulare conclusioni universalmente generalizzabili.

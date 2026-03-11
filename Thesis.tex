@@ -1,0 +1,184 @@
+%--------------------------------------------------------------
+% thesis.tex 
+%--------------------------------------------------------------
+% Corso di Laurea in Informatica 
+% - template for the main file of Informatica@Unifi Thesis 
+% - based on Classic Thesis Style Copyright (C) 2008 
+%   Andr\'e Miede http://www.miede.de   
+%--------------------------------------------------------------
+\documentclass[twoside,openright,titlepage,fleqn,
+	headinclude,12pt,a4paper,BCOR=5mm,footinclude]{scrbook}
+
+\usepackage[nottoc]{tocbibind}
+%--------------------------------------------------------------
+% Inputs for the title page 
+%--------------------------------------------------------------
+\newcommand{\myItalianTitle}{Applicabilità di JHipster per lo sviluppo guidato dai test, automazione della build, e integrazione continua\xspace}
+\newcommand{\myEnglishTitle}{JHipster's applicability for Test-Driven Development, build automation, and continuous integration.\xspace}
+% use the right myDegree option
+\newcommand{\myDegree}{Corso di Laurea in Informatica\xspace}
+%\newcommand{\myDegree}{Corso di Laurea Magistrale in Informatica\xspace}
+\newcommand{\myName}{Giovanni Paganelli\xspace}
+\newcommand{\mySupervisorTitle}{Relatore/Relatrice\xspace} %%% remove one of the two
+\newcommand{\mySupervisorName}{\textit{Supervisor's Name Surname}\xspace} 
+\newcommand{\myCoSupervisorTitle}{Correlatore/Correlatrice\xspace} %%% optional: remove this command if the thesis has no Co-Supervisor
+\newcommand{\myCoSupervisorName}{\textit{Co-Supervisor's Name Surname}\xspace} %%% optional: remove this command if the thesis has no Co-Supervisor
+\newcommand{\myTime}{Anno Accademico 202X-202Y\xspace}
+%--------------------------------------------------------------
+
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc} 
+
+% switch italian and english, depending on the language of the thesis
+% this will change the chapter titles
+\usepackage[italian]{babel}
+%\usepackage[english]{babel}
+\usepackage{csquotes}
+
+\usepackage[fleqn]{amsmath}  
+\usepackage{ellipsis}
+\usepackage{listings}
+\usepackage{subfig}
+\usepackage{caption}
+\usepackage{appendix}
+\usepackage{siunitx}
+\usepackage{minted}
+\usepackage{dirtree}
+
+\usepackage{float} % per [H]
+\usepackage[pdftex]{graphicx} 
+\usepackage[dvipsnames]{xcolor}
+\newcommand{\todo}[1]{%
+	\par\noindent\colorbox{yellow}{\parbox{0.95\linewidth}{\textcolor{red}{\textbf{TODO:} #1}}}\par
+}
+\newcommand{\chosen}[1]{\textcolor{ForestGreen}{\textbf{#1}}}
+\graphicspath{{./Figures/}}
+\usepackage[eulerchapternumbers,linedheaders,subfig,beramono,eulermath,
+parts,dottedtoc]{classicthesis}
+\clearpairofpagestyles
+\lehead{\mbox{\headmark\hfil}}
+\rohead{\mbox{\hfil\headmark}}
+\ofoot[\small\pagemark]{\small\pagemark}
+%--------------------------------------------------------------
+% Layout setting
+%--------------------------------------------------------------
+\newlength{\abcd} 
+\newcommand{\myfloatalign}{\centering} 
+\setlength{\extrarowheight}{3pt} 
+\captionsetup{format=hang,font=small}
+
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	ignoremp,
+	includehead,
+	includefoot,
+	top=2cm,
+	bottom=3cm,
+	inner=3cm,
+	outer=2cm,
+}
+
+\lstset{
+  	frame=tb,
+	language=Matlab,
+  	aboveskip=3mm,
+  	belowskip=3mm,
+  	showstringspaces=false,
+  	columns=flexible,
+  	basicstyle={\small\ttfamily},
+  	numbers=none,
+  	breaklines=true,
+  	breakatwhitespace=true,
+  	tabsize=3
+}
+
+\definecolor{jdlBackground}{HTML}{1E1E1E}
+\definecolor{jdlKeyword}{HTML}{C586C0}      % entity, enum
+\definecolor{jdlRelation}{HTML}{FF79C6}     % OneToMany etc
+\definecolor{jdlType}{HTML}{4EC9B0}         % String, Long
+\definecolor{jdlOption}{HTML}{FFD700}       % required, with
+\definecolor{jdlIdentifier}{HTML}{9CDCFE}   % entity names
+\definecolor{jdlComment}{HTML}{6A9955}
+
+\lstdefinelanguage{JDL}{
+	morekeywords=[1]{entity,enum,relationship,dto,service,use},
+	morekeywords=[2]{OneToMany,ManyToOne,ManyToMany,OneToOne},
+	morekeywords=[3]{String,Long,Instant,TextBlob,AnyBlob},
+	morekeywords=[4]{required,to,with,minlength,maxlength,builtInEntity},
+	sensitive=true,
+	morecomment=[l]{//},
+	morecomment=[s]{/**}{*/},
+	keywordstyle=[1]\color{jdlKeyword}\bfseries,
+	keywordstyle=[2]\color{jdlRelation}\bfseries,
+	keywordstyle=[3]\color{jdlType},
+	keywordstyle=[4]\color{jdlOption},
+	commentstyle=\color{jdlComment},
+}
+\lstset{
+	language=JDL,
+	backgroundcolor=\color{jdlBackground},
+	basicstyle=\ttfamily\small\color{white},
+	columns=fullflexible,
+	keepspaces=true,
+	showstringspaces=false,
+	breaklines=true
+}
+\setminted{
+	fontsize=\small,
+	breaklines,
+	autogobble,
+	tabsize=2
+}
+% remove hypehns
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\tolerance=9999
+\emergencystretch=3em
+%--------------------------------------------------------------
+\begin{document}
+\frenchspacing
+\raggedbottom
+\pagenumbering{roman}
+\pagestyle{plain}
+%--------------------------------------------------------------
+% Frontmatter
+%--------------------------------------------------------------
+\include{FrontMatter/Titlepage}
+\pagestyle{scrheadings}
+%--------------------------------------------------------------
+% Mainmatter
+%--------------------------------------------------------------
+\pagenumbering{arabic}
+\tableofcontents
+\listoffigures
+%\cleardoublepage
+\thispagestyle{empty}
+%\begin{flushright}
+%\null\vspace{\stretch {1}}
+%--------------------------------------------------------------
+% Citation
+%--------------------------------------------------------------
+%\emph{"Insert citation" \break --- Insert citation's author} \vspace{\stretch{2}}\null
+%\end{flushright}
+%\cleardoublepage
+
+%--------------------------------------------------------------
+% Chapters
+%--------------------------------------------------------------
+\include{Chapters/01-Introduction}
+\include{Chapters/02-StateOfTheArt}
+\include{Chapters/03-JHipster}
+\include{Chapters/04-Proposal}
+\include{Chapters/05-Evaluation}
+\include{Chapters/06-Conclusions}
+
+%--------------------------------------------------------------
+% Bibliography
+%--------------------------------------------------------------
+\bibliographystyle{plain} 
+\bibliography{Bibliography} % Entries are in the Bibliography.bib file
+
+%--------------------------------------------------------------
+\end{document}
+%--------------------------------------------------------------

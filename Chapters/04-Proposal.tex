@@ -1,0 +1,954 @@
+% !TEX root = ../Thesis.tex
+
+\chapter{Caso di studio: applicazione di gestione note}
+\label{cap:caso-studio}
+
+Questo capitolo descrive il caso di studio utilizzato per valutare concretamente l’applicabilità di metodologie TDD, BDD e pratiche di integrazione continua in un progetto generato con JHipster. L’obiettivo non è presentare un prodotto completo in senso commerciale, bensì un dominio sufficientemente realistico e con complessità adeguata per mettere in evidenza vantaggi e limiti  nell'utilizzare JHipster.
+
+L'applicazione è ispirata, a livello concettuale, a servizi dei gestione delle note come Google Keep. L'app dovrà consentire a tutti gli utenti di creare, modificare ed eliminare note, organizzandole tramite etichette (tag) e associando eventuali allegati.
+
+\section{Setup del progetto e scelte architetturali}
+\label{sec:setup-architettura}
+Il progetto è stato generato tramite il CLI JHipster v8.11.0 come applicazione monolitica, scelta motivata dal fatto che consente di concentrare l’analisi sulle pratiche di testing e automazione, evitando la complessità aggiuntiva tipica di un’architettura a microservizi. Di seguito elenco le opzioni che il CLI mette a disposizione al momento della creazione:
+
+\begin{itemize}
+	\item Nome dell’applicazione: \chosen{NoticeMe};
+	\item Architettura: \chosen{Monolitica}, Gateway, Microservizi;
+	\item Strumento di build per il backend: \chosen{Maven}, Gradle;
+	\item Nome del package Java di base: \chosen{com.giovannip.noticeme};
+	\item Supporto a Spring WebFlux: Yes/\chosen{No};
+	\item Tipo di autenticazione: Session-based, OAuth 2.0 / OIDC, \chosen{JWT};
+	\item Framework di test aggiuntivi per il backend: \chosen{Cucumber}, \chosen{Gatling};
+	\item Tipo di database: Cassandra, MongoDB, Neo4j, Couchbase, \chosen{SQL};
+	\item Database di sviluppo: H2 in-memory, \chosen{H2 su disco}, MySQL;
+	\item Database di produzione: PostgreSQL, MariaDB, \chosen{MySQL}, altri;
+	\item Cache provider: Hazelcast, Caffeine, Infinispan, \chosen{Ehcache};
+	\item Second-level cache di Hibernate: No, \chosen{Yes};
+	\item Tecnologie addizionali: Elasticsearch, WebSockets, Kafka, Pulsar, API first development con OpenAPI;
+	\item Framework client: React, Vue, \chosen{Angular}, nessun frontend;
+	\item Framework di test aggiuntivi per il frontend: \chosen{Cypress};
+	\item Interfaccia di amministrazione: No, \chosen{Yes};
+	\item Tema grafico client: Brite, Flatly, Cerulean, ecc., \chosen{Default};
+	\item Supporto alla traduzione: No, \chosen{Yes};
+	\item Lingua nativa: \chosen{it};
+	\item Lingue aggiuntive abilitate: \chosen{en};
+	\item Test Cypress: No, \chosen{Yes};
+	\item Audit Cypress: No, \chosen{Yes}.
+\end{itemize}
+
+\section{Modellazione del dominio}
+\label{sec:modellazione-dominio}
+Per generare il dominio dell’applicazione è possibile ricorrere al CLI di JHipster tramite il comando \texttt{jhipster entity <entityName> --[options]}, generando le entità una per una, oppure utilizzare l’editor online di JHipster Domain Language Studio \url{https://start.jhipster.tech/jdl-studio/} che consente di definire direttamente entità, attributi, vincoli di validazione e relazioni tra esse. Per ciascuna entità possono inoltre essere specificate le seguenti opzioni:
+
+\begin{itemize}
+	\item \textbf{DTO}: generazione dei Data Transfer Object tramite \texttt{MapStruct};
+	\item \textbf{Service layer}: generazione automatica delle classi di servizio per incapsulare la logica applicativa;
+	\item \textbf{Pagination}: configurazione della modalità di paginazione nel frontend;
+	\item \textbf{Filtering}: configurazione dei filtri disponibili sulle entità.
+\end{itemize}
+
+Il dominio dell'applicazione \textit{NoticeMe} è stato realizzato tramite JDL Studio ed è composto dalle entità principali \texttt{Note}, \texttt{Tag} e \texttt{Attachment}, oltre all'entità \texttt{User} fornita automaticamente dal framework JHipster per la gestione dell'autenticazione e degli utenti.
+
+\begin{lstlisting}[language=JDL,caption={Modello di dominio definito tramite JHipster Domain Language},label={lst:jdl-noticeme}]
+	/**
+	* JHipster JDL model for NoticeMe
+	*/
+	
+	entity Tag {
+		tagName String required minlength(1) maxlength(255)
+		color String maxlength(20)
+	}
+	
+	entity Note {
+		title String maxlength(255)
+		content TextBlob
+		lastUpdateDate Instant required
+		alarmDate Instant
+		status NoteStatus required
+	}
+	
+	entity Attachment {
+		fileName String required
+		data AnyBlob required
+		dataContentType String required
+		size Long
+	}
+	
+	enum NoteStatus{
+		NORMAL,
+		PINNED,
+		ARCHIVED,
+		DELETED
+	}
+	
+	relationship OneToMany {
+		Note{attachment} to Attachment{note required}
+	}
+	
+	relationship ManyToOne {
+		Note{owner required} to User with builtInEntity,
+		Tag{owner required} to User with builtInEntity,
+	}
+	
+	relationship ManyToMany {
+		Note{tag(tagName)} to Tag{notes}
+	}
+	
+	use infinite-scroll for Note, Tag, Attachment
+	
+	dto * with mapstruct
+	
+	service * with serviceClass
+\end{lstlisting}
+
+\subsection{Relazione molti-a-molti tra Note e Tag}
+\label{subsec:moltimolti-note-tag}
+
+La relazione molti-a-molti tra \texttt{Note} e \texttt{Tag} permette di modellare il seguente comportamento: una nota può essere classificata con più etichette e una stessa etichetta può essere riutilizzata su più note. Dal punto di vista della persistenza, la relazione è implementata tramite una tabella di join generata automaticamente dal framework.
+
+A livello JPA, ciò si traduce nell’uso di \texttt{@ManyToMany} e della configurazione della join table. In assenza di requisiti particolari, lo sviluppatore non deve intervenire manualmente su tale configurazione, che risulta già funzionante \textit{out of the box}.
+
+\begin{figure}[tbp]
+	\centering
+	\includegraphics[width=\textwidth]{jhipster-jdl.png}
+	\caption{Schema concettuale del dominio e relazione molti-a-molti tra note e tag.}
+	\label{fig:er-dominio}
+\end{figure}
+
+\subsection{Gestione degli utenti e proprietà dei dati}
+\label{subsec:proprieta-dati}
+
+L’applicazione sfrutta il sistema di autenticazione integrato in JHipster per associare note e tag ai rispettivi utenti proprietari. Questo consente di garantire l’isolamento dei dati tra utenti differenti e di introdurre controlli di accesso negli endpoint REST, evitando che un utente possa leggere o modificare risorse non di sua proprietà.
+
+\section{Test-Driven Development nel caso di studio}
+\label{sec:tdd}
+Questa sezione analizza l’applicazione del Test-Driven Development (TDD) all’interno del caso di studio sviluppato con JHipster. L’analisi viene condotta attraverso l’introduzione di test aggiuntivi relativi a vincoli di dominio non coperti dal semplice scaffolding CRUD.
+
+Il TDD prevede che la scrittura del test preceda l’implementazione della funzionalità. In un progetto generato con JHipster, tuttavia, una parte significativa del codice applicativo e una suite iniziale di test vengono prodotti automaticamente. Ciò non rende impossibile l’adozione del TDD fin da subito: il TDD viene applicato in modo \emph{incrementale} sulle funzionalità aggiuntive o sui vincoli che emergono durante l’evoluzione del progetto.
+
+\subsection{Analisi dei test generati automaticamente da JHipster}
+\label{subsec:test-generati}
+
+JHipster genera automaticamente una suite di test backend che copre principalmente le funzionalità CRUD e la correttezza degli endpoint REST. In particolare, per ciascuna entità vengono tipicamente prodotti test di integrazione basati su Spring Boot Test e MockMvc, che verificano l’accesso alle API, la serializzazione JSON, i codici di risposta HTTP e alcune validazioni di base.
+
+Questi test risultano utili perché forniscono una base iniziale che intercetta rapidamente errori di configurazione, verifica che l’applicazione sia avviabile e funzionante, costituisce un primo strato di regressione automatica.
+
+Tuttavia, tali test non derivano direttamente da requisiti di dominio espliciti, ma verificano prevalentemente la correttezza strutturale dell’applicazione (ad esempio: ``l’endpoint di creazione restituisce 201'', ``il campo obbligatorio non può essere nullo''). Inoltre, non coprono regole di business specifiche, che devono essere introdotte e testate manualmente.
+
+\begin{figure}[H]
+\dirtree{%
+	.1 src/test/java/com/giovannip/noticeme/.
+	.2 domain/.
+	.3 AttachmentTest.java.
+	.3 NoteTest.java.
+	.3 TagTest.java.
+	.2 service/.
+	.3 dto/.
+	.4 AttachmentDTOTest.java.
+	.4 NoteDTOTest.java.
+	.4 TagDTOTest.java.
+	.3 mapper/.
+	.4 AttachmentMapperTest.java.
+	.4 NoteMapperTest.java.
+	.4 TagMapperTest.java.
+	.2 web/.
+	.3 rest/.
+	.4 AttachmentResourceIT.java.
+	.4 NoteResourceIT.java.
+	.4 TagResourceIT.java.
+	.1 src/test/javascript/.
+	.2 jest/ (example).
+	.3 attachment.component.spec.ts.
+	.3 note.component.spec.ts.
+	.3 tag.component.spec.ts.
+	.2 cypress/.
+	.3 e2e/.
+	.4 entity/.
+	.5 attachment.cy.ts.
+	.5 note.cy.ts.
+	.5 note-access.cy.ts.
+	.5 tag.cy.ts.
+}
+\caption{Estratto dell’albero dei test generati automaticamente}
+\label{fig:test-tree}
+\end{figure}
+
+JHipster genera automaticamente una suite di test che copre sia il backend che il frontend dell'applicazione. In particolare sono presenti test di integrazione per le API REST, test unitari per dominio, DTO e mapper, test unitari frontend tramite Jest e test end-to-end realizzati con Cypress.
+
+\subsubsection{Test di integrazione con Spring Boot}
+\label{sec:integration-test}
+
+Oltre ai test unitari, l'applicazione utilizza test di integrazione per verificare il comportamento del sistema con il contesto applicativo completo, includendo controller REST, service layer, repository e configurazione di sicurezza.
+
+Nel progetto sviluppato con JHipster, i test di integrazione sono organizzati principalmente nelle classi \texttt{*ResourceIT}, generate automaticamente per verificare gli endpoint REST.
+
+\subsection{Applicazione del ciclo Red--Green--Refactor su un vincolo di dominio}
+\label{subsec:red-green-refactor}
+
+Per applicare il TDD, consideriamo un vincolo di business non garantito automaticamente dallo scaffholding delle entità: \emph{un utente può associare a una nota esclusivamente tag di sua proprietà}. È quindi necessario introdurre una logica applicativa nel service layer (o in uno strato equivalente) che verifichi la proprietà dei tag prima di effettuare l’associazione.
+
+\subsubsection{Fase Red: definizione del comportamento atteso}
+\label{subsec:red}
+
+Nella fase iniziale è stato scritto un test di integrazione che formalizza il comportamento desiderato: dato un utente autenticato, proprietario della nota, l'aggiornamento deve fallire se tra i tag associati compare almeno un tag appartenente a un altro utente.
+\captionsetup{type=listing}
+\captionof{listing}{Test TDD: rifiuto dell'associazione di un tag appartenente a un altro utente}
+\label{lst:tdd-red-note-foreign-tag}
+\begin{minted}[fontsize=\small,breaklines,autogobble]{java}
+@Test
+@Transactional
+void putNoteShouldRejectTagOwnedByAnotherUser() throws Exception {
+	User owner = getOrCreateUser(em, "user");
+	User other = getOrCreateUser(em, "other");
+	
+	insertedNote = noteRepository.saveAndFlush(
+	new Note()
+	.title(DEFAULT_TITLE)
+	.content(DEFAULT_CONTENT)
+	.status(DEFAULT_STATUS)
+	.owner(owner)
+	);
+	
+	Tag foreignTag = new Tag()
+	.tagName("foreign")
+	.color("red")
+	.owner(other);
+	em.persist(foreignTag);
+	em.flush();
+	
+	NoteDTO noteDTO = noteMapper.toDto(insertedNote);
+	
+	TagDTO foreignTagDTO = new TagDTO();
+	foreignTagDTO.setId(foreignTag.getId());
+	foreignTagDTO.setTagName(foreignTag.getTagName());
+	foreignTagDTO.setColor(foreignTag.getColor());
+	
+	noteDTO.setTags(Set.of(foreignTagDTO));
+	
+	restNoteMockMvc
+	.perform(
+	put(ENTITY_API_URL_ID, insertedNote.getId())
+	.contentType(MediaType.APPLICATION_JSON)
+	.content(om.writeValueAsBytes(noteDTO))
+	)
+	.andExpect(status().isBadRequest());
+	
+	em.clear();
+	Note persisted = noteRepository.findById(insertedNote.getId()).orElseThrow();
+	assertThat(persisted.getTags()).isEmpty();
+}
+\end{minted}
+
+L'operazione di aggiornamento della nota con il tag ``estraneo'' viene eseguita tramite endpoint REST e il comportamento atteso è il rifiuto della richiesta con codice HTTP \texttt{400}.
+
+\subsubsection{Fase Green: implementazione minima nel service layer}
+\label{subsec:green}
+
+Per evitare di caricare inutilmente tutte le entità \texttt{Tag}, è stata aggiunta nella repository una query derivata che conta quanti tag, tra quelli passati in input, appartengono all'utente corrente.
+\captionsetup{type=listing}
+\captionof{listing}{Metodo di supporto aggiunto alla repository}
+\label{lst:tdd-green-repository}
+\begin{minted}{java}
+	public interface TagRepository extends JpaRepository<Tag, Long> {
+		
+		long countByIdInAndOwnerLogin(Collection<Long> ids, String login);
+		
+	}
+\end{minted}
+
+Nel service layer, il controllo può essere implementato come segue:
+\captionsetup{type=listing}
+\captionof{listing}{Implementazione minima del controllo nel service layer}
+\label{lst:tdd-green-service}
+\begin{minted}{java}
+	@Service
+	@Transactional
+	public class NoteService {
+		
+		private final NoteRepository noteRepository;
+		private final UserService userService;
+		private final NoteMapper noteMapper;
+		private final TagRepository tagRepository;
+		
+		public NoteService(
+		NoteRepository noteRepository,
+		NoteMapper noteMapper,
+		UserService userService,
+		TagRepository tagRepository
+		) {
+			this.noteRepository = noteRepository;
+			this.userService = userService;
+			this.noteMapper = noteMapper;
+			this.tagRepository = tagRepository;
+		}
+		
+		public NoteDTO update(NoteDTO noteDTO) {
+			validateOwnedTags(noteDTO);
+			
+			Note existingNote = noteRepository
+			.findById(noteDTO.getId())
+			.orElseThrow(() -> new IllegalArgumentException(
+			"Note not found with id " + noteDTO.getId()
+			));
+			
+			noteMapper.partialUpdate(existingNote, noteDTO);
+			existingNote = noteRepository.save(existingNote);
+			return noteMapper.toDto(existingNote);
+		}
+		
+		private void validateOwnedTags(NoteDTO noteDTO) {
+			if (noteDTO.getTags() == null || noteDTO.getTags().isEmpty()) {
+				return;
+			}
+			
+			String currentLogin = SecurityUtils.getCurrentUserLogin()
+			.orElseThrow(() -> new IllegalStateException("Current user not found"));
+			
+			Set<Long> tagIds = noteDTO.getTags().stream()
+			.map(TagDTO::getId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+			
+			if (tagIds.size() != noteDTO.getTags().size()) {
+				throw new BadRequestAlertException(
+				"Invalid tag list",
+				"note",
+				"taginvalid"
+				);
+			}
+			
+			long ownedTagCount = tagRepository.countByIdInAndOwnerLogin(tagIds, currentLogin);
+			
+			if (ownedTagCount != tagIds.size()) {
+				throw new BadRequestAlertException(
+				"A note can only use tags owned by the current user",
+				"note",
+				"foreigntag"
+				);
+			}
+		}
+	}
+\end{minted}
+
+L'utente autenticato viene recuperato tramite \texttt{SecurityUtils.getCurrentUserLogin()}, utility per ottenere il login associato al contesto di sicurezza corrente. In questo modo la regola di dominio resta centralizzata nel service layer e non dipende dal client.
+
+\subsubsection{Fase Refactor: consolidamento e pulizia}
+\label{subsec:refactor}
+
+Una volta superato il test, il codice è stato rifinito separando chiaramente la logica di validazione dal resto del flusso di aggiornamento. In particolare, il controllo è stato estratto nel metodo privato \texttt{validateOwnedTags(...)}, con due vantaggi principali.
+
+Il vantaggio è la riduzione della duplicazione: lo stesso controllo può essere richiamato non solo in \texttt{update(...)}, ma anche in \texttt{save(...)} e in \texttt{partialUpdate(...)}.
+
+\subsection{Testing della relazione molti-a-molti Note--Tag}
+\label{sec:test-moltimolti}
+
+La relazione molti-a-molti tra \texttt{Note} e \texttt{Tag} rappresenta un punto sensibile nei test di integrazione, poiché coinvolge la join table generata automaticamente da JPA/Hibernate, la gestione delle collezioni e la serializzazione degli oggetti tramite endpoint REST.
+
+Dal punto di vista del testing, è importante verificare che:
+
+\begin{itemize}
+	\item l'associazione tra note e tag venga salvata correttamente nella join table;
+	\item uno stesso tag possa essere associato a più note;
+	\item la rimozione di un tag da una nota aggiorni correttamente la relazione;
+	\item la serializzazione JSON delle collezioni funzioni correttamente negli endpoint REST.
+\end{itemize}
+
+Il Listing~\ref{lst:note-tag-association-test} mostra un esempio di test di integrazione che verifica l'associazione di più tag a una singola nota.
+\captionsetup{type=listing}
+\captionof{listing}{Test di integrazione della relazione Note--Tag}
+\label{lst:note-tag-association-test}
+\begin{minted}{java}
+@Test
+@Transactional
+void shouldAssociateMultipleTagsToNote() throws Exception {
+	User user = getOrCreateUser(em, "user");
+	
+	insertedNote =
+	noteRepository.saveAndFlush(
+	new Note()
+	.title("Test note")
+	.content("content")
+	.status(NoteStatus.NORMAL)
+	.owner(user)
+	);
+	
+	Tag tag1 = tagRepository.saveAndFlush(
+	new Tag().tagName("tag1").color("blue").owner(user)
+	);
+	
+	Tag tag2 = tagRepository.saveAndFlush(
+	new Tag().tagName("tag2").color("red").owner(user)
+	);
+	
+	NoteDTO dto = noteMapper.toDto(insertedNote);
+	
+	TagDTO t1 = new TagDTO();
+	t1.setId(tag1.getId());
+	
+	TagDTO t2 = new TagDTO();
+	t2.setId(tag2.getId());
+	
+	dto.setTags(Set.of(t1, t2));
+	
+	restNoteMockMvc.perform(
+	put(ENTITY_API_URL_ID, insertedNote.getId())
+	.contentType(MediaType.APPLICATION_JSON)
+	.content(om.writeValueAsBytes(dto))
+	).andExpect(status().isOk());
+	
+	em.clear();
+	
+	Note persisted = noteRepository.findById(insertedNote.getId()).orElseThrow();
+	
+	assertThat(persisted.getTags()).hasSize(2);
+}
+\end{minted}
+
+Il test crea una nota e due tag appartenenti allo stesso utente, invia una richiesta REST di aggiornamento della nota e verifica successivamente, interrogando il database, che la collezione dei tag associati contenga effettivamente due elementi. In questo modo si verifica implicitamente anche la corretta persistenza della join table generata da JPA.
+
+\section{Unit testing frontend con Jest}
+\label{sec:jest}
+
+Per il testing del frontend Angular è stato utilizzato \texttt{Jest}, framework di unit testing integrato nel progetto generato da JHipster. Jest consente di verificare in modo rapido e isolato il comportamento di componenti, servizi e classi di supporto del frontend, senza richiedere l’avvio completo dell’applicazione o l’interazione con un browser reale.
+
+L’attenzione si concentra quindi sulla logica lato client, sulla gestione dello stato del componente e sulla corretta interazione con i servizi Angular. Nel progetto i test Jest sono collocati accanto ai file del frontend. Per l’entità \texttt{Note}, ad esempio, JHipster ha generato automaticamente test per:
+\begin{itemize}
+	\item il componente di lista \texttt{note.component.spec.ts};
+	\item il service REST \texttt{note.service.spec.ts};
+	\item il servizio di gestione del form \texttt{note-form.service.spec.ts};
+	\item il componente di aggiornamento \texttt{note-update-dialog.component.spec.ts}.
+\end{itemize}
+
+\subsection{Esempi di test generati}
+\label{subsec:jest-esempi}
+
+JHipster genera verifiche per le principali operazioni CRUD lato client: ricerca di un elemento, creazione, aggiornamento completo, aggiornamento parziale, recupero della lista ed eliminazione. I test utilizzano \texttt{HttpTestingController} per simulare le richieste HTTP e verificare che il service costruisca correttamente le chiamate REST e trasformi i dati restituiti dal backend nel modello TypeScript usato dal frontend.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto semplificato di test Jest per il service delle note}
+\label{lst:jest-note-service}
+\begin{minted}[linenos]{typescript}
+	describe('Note Service', () => {
+		let service: NoteService;
+		let httpMock: HttpTestingController;
+		let expectedResult: INote | INote[] | boolean | null;
+		
+		beforeEach(() => {
+			TestBed.configureTestingModule({
+				providers: [provideHttpClient(), provideHttpClientTesting()],
+			});
+			service = TestBed.inject(NoteService);
+			httpMock = TestBed.inject(HttpTestingController);
+		});
+		
+		it('should find an element', () => {
+			service.find(123).subscribe(resp => (expectedResult = resp.body));
+			
+			const req = httpMock.expectOne({ method: 'GET' });
+			req.flush(returnedFromService);
+			
+			expect(expectedResult).toMatchObject(expected);
+		});
+		
+		it('should delete a Note', () => {
+			service.delete(123).subscribe(resp => (expectedResult = resp.ok));
+			
+			const req = httpMock.expectOne({ method: 'DELETE' });
+			req.flush({ status: 200 });
+			
+			expect(expectedResult).toBe(true);
+		});
+	});
+\end{minted}
+
+\section{Behavior-Driven Development con Cucumber}
+\label{sec:bdd-cucumber}
+
+Per formalizzare comportamenti ad alto livello è possibile integrare Cucumber, framework che consente di descrivere scenari di utilizzo attraverso il linguaggio Gherkin. Questo approccio permette di esprimere i requisiti funzionali in una forma leggibile anche da soggetti non tecnici, favorendo la comunicazione tra sviluppatori e stakeholder.
+
+Un esempio di scenario sviluppato nel caso di studio è riportato nel Listing~\ref{lst:gherkin-scenario}.
+
+\captionsetup{type=listing}
+\captionof{listing}{Esempio di scenario Gherkin}
+\label{lst:gherkin-scenario}
+\begin{minted}{gherkin}
+	Feature: Gestione delle note
+	
+	Scenario: Creazione di una nota con due tag
+	Given l'utente autenticato ha creato i tag "Studio" e "Lavoro"
+	When crea una nota con titolo "Preparare esame"
+	And associa i tag "Studio" e "Lavoro"
+	Then la nota deve essere salvata con 2 tag associati
+\end{minted}
+
+Gli scenari Gherkin vengono poi collegati al codice applicativo tramite le \textit{step definitions}, implementate in Java e integrate con il contesto Spring Boot. Ogni passo descritto nello scenario viene associato a un metodo che esegue le operazioni necessarie e verifica gli effetti prodotti sul sistema. Le step definitions possono interagire con i service applicativi oppure con gli endpoint REST, a seconda del livello di astrazione scelto per il test.
+\captionsetup{type=listing}
+\captionof{listing}{Esempio semplificato di step definition}
+\label{lst:cucumber-step}
+\begin{minted}{java}
+	@Transactional
+	@WithMockUser(username = "user")
+	public class GestioneNoteStepDefs extends StepDefs {
+		
+		@Autowired
+		private EntityManager em;
+		
+		@Autowired
+		private TagRepository tagRepository;
+		
+		@Autowired
+		private NoteRepository noteRepository;
+		
+		private Note notaCreata;
+		private final Set<Tag> tagDaAssociare = new HashSet<>();
+		
+		@Before
+		public void cleanScenarioState() {
+			notaCreata = null;
+			tagDaAssociare.clear();
+		}
+		
+		@Given("l'utente autenticato ha creato i tag {string} e {string}")
+		public void utenteHaCreatoITag(String nomeTag1, String nomeTag2) {
+			Tag tag1 = creaTagSeAssente(nomeTag1);
+			Tag tag2 = creaTagSeAssente(nomeTag2);
+			
+			tagDaAssociare.add(tag1);
+			tagDaAssociare.add(tag2);
+		}
+		
+		@When("crea una nota con titolo {string}")
+		public void creaUnaNotaConTitolo(String titolo) {
+			User owner = getOrCreateUser("user");
+			
+			Note note = new Note()
+			.title(titolo)
+			.content("contenuto di test")
+			.status(NoteStatus.NORMAL)
+			.owner(owner);
+			
+			notaCreata = noteRepository.saveAndFlush(note);
+		}
+	}
+\end{minted}
+
+JHipster, tuttavia, non genera molto oltre la configurazione base di Cucumber. Nel caso in esame, il framework si limita essenzialmente a fornire uno scenario di esempio, riportato nel Listing~\ref{lst:gherkin-scenario-gen}.
+
+\begin{listing}[H]
+\caption{scenario generato}
+\label{lst:gherkin-scenario-gen}
+\begin{minted}{gherkin}
+Feature: User management
+
+Scenario: Retrieve administrator user
+When I search user 'admin'
+Then the user is found
+And his last name is 'Administrator'
+\end{minted}
+\end{listing}
+
+\begin{figure}[tbp]
+	\centering
+	\includegraphics[width=\textwidth]{cucumber.JPG}
+	\caption{report di cucumber.}
+	\label{fig:cucumber-reports}
+\end{figure}
+
+\section{End-to-End Testing con Cypress}
+\label{sec:cypress}
+
+Per testare l'applicazione dal punto di vista dell'utente finale viene integrato Cypress, uno strumento dedicato ai test end-to-end per applicazioni web. Cypress consente di eseguire il browser in modalità controllata e simulare interazioni reali con l'interfaccia Angular, verificando non solo la correttezza delle singole chiamate HTTP, ma soprattutto il comportamento complessivo dell'applicazione durante l'interazione utente.
+
+I test Cypress auto generati dal progetto coprono già diversi aspetti dell’applicazione, in particolare:
+
+\begin{itemize}
+	\item autenticazione dell’utente;
+	\item navigazione tra le pagine;
+	\item accesso alle pagine CRUD delle entità;
+\end{itemize}
+
+I test generati automaticamente mostrano già la struttura generale degli scenari E2E: apertura della pagina dell’entità, accesso al form di creazione, visualizzazione della pagina di dettaglio, modifica e ritorno alla lista.
+
+Tuttavia, nel caso di studio considerato, l'interfaccia relativa alle note è stata personalizzata rispetto al CRUD standard generato da JHipster. Per questo motivo i test pregenerati relativi all'entità \texttt{Note} non risultano aderenti al comportamento reale della UI e sono stati quindi adattati.
+
+In particolare, sono stati implementati questi test specifici per verificare tre scenari applicativi:
+
+\begin{itemize}
+	\item creazione di una nuova nota e verifica della sua comparsa nella lista;
+	\item creazione di una nota con associazione immediata di un tag;
+	\item apertura del dialog di modifica di una nota esistente e aggiunta di un ulteriore tag, con verifica dell'aggiornamento nell'interfaccia.
+\end{itemize}
+
+Il Listing~\ref{lst:cypress-test} mostra un estratto di un test Cypress. Lo scenario esegue l'accesso alla pagina delle note, crea una nuova nota, apre il dialog di aggiornamento tramite selezione della card corrispondente e aggiunge un nuovo tag, verificando sia la corretta risposta HTTP sia l'effettiva presenza dei tag nella lista delle note.
+
+\captionsetup{type=listing}
+\captionof{listing}{Test end-to-end con Cypress per creazione e aggiornamento di una nota}
+\label{lst:cypress-test}
+\begin{minted}[linenos]{typescript}
+it('should create a note, open update dialog, add a tag and show both in UI', () => {
+	const title = `E2E dialog tag note ${Date.now()}`;
+	const content = 'Nota da aggiornare dal dialog';
+	const initialTag = `iniziale-${Date.now()}`;
+	const addedTag = `aggiunto-${Date.now()}`;
+	
+	cy.visit('/note');
+	cy.wait('@getNotes');
+	
+	cy.get('[data-cy="title"]').clear().type(title);
+	cy.get('[data-cy="content"]').clear().type(content);
+	cy.get('[data-cy="tagInput"]').first().type(`${initialTag}{enter}`);
+	cy.get('[data-cy="NoteSaveButton"]').click();
+	
+	cy.wait('@postNote').then(({ response }) => {
+		expect(response?.statusCode).to.eq(201);
+	});
+	
+	cy.contains('[data-cy="noteTitle"]', title).should('be.visible');
+	
+	cy.contains('[data-cy="noteCard"] [data-cy="noteTitle"]', title)
+	.closest('[data-cy="noteCard"]')
+	.click();
+	
+	cy.get('[data-cy="noteUpdateDialog"]')
+	.should('be.visible')
+	.within(() => {
+		cy.contains('[data-cy="tagChip"]', initialTag).should('be.visible');
+		cy.get('[data-cy="tagInput"]').type(`${addedTag}{enter}`);
+		cy.get('[data-cy="NoteSaveEdit"]').click({ force: true });
+	});
+	
+	cy.wait('@patchNote').then(({ response }) => {
+		expect(response?.statusCode).to.eq(200);
+	});
+	
+	cy.contains('[data-cy="noteCard"] [data-cy="noteTitle"]', title)
+	.closest('[data-cy="noteCard"]')
+	.within(() => {
+		cy.contains('[data-cy="tagChip"]', initialTag).should('be.visible');
+		cy.contains('[data-cy="tagChip"]', addedTag).should('be.visible');
+	});
+});
+\end{minted}
+
+i test Cypress possono essere lanciati sia in ambiente di sviluppo sia in modalità automatizzata. Durante lo sviluppo conviene utilizzare l'interfaccia grafica di Cypress, che consente di osservare passo per passo i comandi eseguiti, il DOM renderizzato e le chiamate HTTP intercettate. In fase di esecuzione automatizzata, invece, la suite può essere avviata in modalità \emph{headless}, adatto alle pipeline CI.
+
+\section{Mutation Testing con PIT}
+\label{sec:pit}
+
+Per valutare la robustezza effettiva della suite dei test è stato introdotto il mutation testing tramite PIT (Pitest). A differenza della semplice copertura del codice, il mutation testing introduce modifiche artificiali nel codice sorgente, chiamate \textit{mutanti}, per verificare se i test sono in grado di individuare tali variazioni. Se un mutante viene rilevato da almeno un test, esso viene considerato ``ucciso''; in caso contrario, indica una possibile debolezza nella suite di test.
+
+Per utilizzare PIT con maven basta introdurre la configurazione nel pom.xml.
+
+\captionsetup{type=listing}
+\captionof{listing}{Configurazione Maven del plugin PIT}
+\label{lst:pit-plugin}
+\begin{minted}{xml}
+	<plugin>
+	<groupId>org.pitest</groupId>
+	<artifactId>pitest-maven</artifactId>
+	<version>\${pitest.version}</version>
+	<configuration>
+	<targetClasses>
+	<param>com.giovannip.*</param>
+	</targetClasses>
+	<targetTests>
+	<param>com.giovannip.*Test</param>
+	</targetTests>
+	<mutationThreshold>80</mutationThreshold>
+	<avoidCallsTo>
+	<param>java.util.logging</param>
+	<param>org.slf4j</param>
+	</avoidCallsTo>
+	<threads>4</threads>
+	<outputFormats>
+	<param>HTML</param>
+	</outputFormats>
+	</configuration>
+	</plugin>
+\end{minted}
+
+\todo{mostrare i risultati del pitest}
+
+\section{Performance Testing con Gatling}
+\label{sec:gatling}
+
+JHipster integra automaticamente Gatling come strumento per l'esecuzione di test di performance sulle API REST. Gatling consente di simulare un numero elevato di utenti concorrenti e di raccogliere metriche quali tempo medio di risposta, throughput e percentili di latenza.
+
+\todo{mostrare e analizzare i test pregenerati}
+
+Nel contesto della presente tesi i test di performance non costituiscono il focus principale dell'analisi. Tuttavia, la presenza di Gatling all'interno dello stack JHipster dimostra come l'ecosistema supporti anche la verifica di requisiti non funzionali, permettendo di estendere il processo di testing oltre i livelli unitari e di integrazione.
+
+\chapter{Integrazione continua nel caso di studio}
+\label{cap:ci}
+
+Questo capitolo descrive l’infrastruttura di Continuous Integration e le scelte effettuate per automatizzare build, test e analisi di qualità del progetto. La soluzione adottata consiste in un ambiente CI locale basato su Jenkins e Docker, integrato con SonarQube, un registry Docker locale e gli strumenti di test discussi nei capitoli precedenti.
+
+JHipster mette a disposizione configurazioni pronte per pipeline CI attraverso il CLI (ad esempio per GitHub Actions, GitLab CI o Jenkins). Tuttavia, nel caso di studio tali configurazioni non risultavano pienamente compatibili con le esigenze del progetto; per questo motivo è stato realizzato un \texttt{Jenkinsfile} personalizzato, affiancato da un file \texttt{docker-compose} per la creazione di una pipeline CI locale.
+
+\section{Infrastruttura CI locale basata su Docker}
+\label{sec:infra-docker}
+
+Per rendere l'ambiente facilmente riproducibile, i servizi necessari alla pipeline sono stati orchestrati tramite \texttt{docker-compose}.
+
+L'infrastruttura utilizzata nel caso di studio comprende i seguenti componenti principali:
+
+\begin{itemize}
+	\item Jenkins, responsabile dell'esecuzione della pipeline;
+	\item SonarQube, utilizzato per l'analisi statica del codice e la valutazione dei quality gate;
+	\item un database PostgreSQL dedicato al funzionamento di SonarQube;
+	\item un registry Docker locale per la pubblicazione delle immagini generate.
+\end{itemize}
+
+Il Listing~\ref{lst:docker-compose-ci} mostra un estratto della configurazione \texttt{docker-compose}. la configurazione completa è disponibile nel repository del progetto.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto del docker-compose per l'ambiente CI locale}
+\label{lst:docker-compose-ci}
+\begin{minted}{yaml}
+networks:
+  ci-net:
+
+services:
+  sonar-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+
+  sonarqube:
+    image: sonarqube:community
+    depends_on:
+      - sonar-db
+    ports:
+      - "19000:9000"
+
+  registry:
+    image: registry
+    ports:
+      - "15000:5000"
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    user: root
+    ports:
+      - "18080:8080"
+      - "50000:50000"
+    depends_on:
+      - sonarqube
+      - registry
+\end{minted}
+
+\section{Pipeline Jenkins: struttura e strategia multi-branch}
+\label{sec:pipeline-jenkins}
+
+La pipeline è stata implementata tramite Jenkinsfile dichiarativo. La strategia adottata differenzia le attività in base al tipo di branch e al contesto di esecuzione:
+
+\begin{itemize}
+	\item sulle \emph{pull request} viene eseguita una suite rapida di unit test;
+	\item sui branch \texttt{feature/*} viene eseguito un controllo qualità intermedio con raccolta di metriche;
+	\item sul branch \texttt{dev} viene eseguita una suite completa, comprensiva di report Cucumber e, opzionalmente, di test più onerosi;
+	\item sul branch \texttt{main} viene eseguita la build di rilascio e il packaging per la produzione.
+\end{itemize}
+
+Questa strategia consente, da un lato, di ottenere feedback rapido durante lo sviluppo e, dall’altro, di eseguire verifiche più approfondite prima dell’integrazione definitiva del codice.
+
+\subsection{Validazione rapida su Pull Request}
+Per le pull request la pipeline esegue una suite rapida di test, con l’obiettivo di fornire feedback immediato prima del merge.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: validazione PR}
+\label{lst:jenkins-pr}
+\begin{minted}{groovy}
+	stage('pr-validation') {
+		when { changeRequest() }
+		steps {
+			sh './mvnw -ntp -Pdev,webapp,no-liquibase,frontend-test clean test'
+		}
+		post {
+			always {
+				junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+			}
+		}
+	}
+\end{minted}
+
+\subsection{Suite completa su branch \texttt{dev} e raccolta report}
+
+Sul branch \texttt{dev} viene eseguita una suite più completa, includendo test di integrazione e la generazione di report. vengono raccolti report JUnit (\texttt{surefire}) e (\texttt{failsafe}), vengono pubblicati report di code coverage tramite JaCoCo, vengono pubblicati report Cucumber quando presenti.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: suite completa su dev e report}
+\label{lst:jenkins-dev}
+\begin{minted}{groovy}
+	stage('dev-full-qa') {
+		when { branch 'dev' }
+		steps {
+			sh './mvnw -ntp -Pdev,webapp,frontend-test verify'
+		}
+		post {
+			always {
+				cucumber fileIncludePattern: '**/cucumber-reports/*.json'
+				junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+				junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'
+				publishHTML(target: [
+				reportDir: 'target/site/jacoco',
+				reportFiles: 'index.html',
+				reportName: 'Jacoco Coverage'
+				])
+			}
+		}
+	}
+\end{minted}
+
+\subsection{Test ad alto costo computazionale}
+\label{sub:heavy-tests}
+
+Alcuni strumenti di verifica della qualità, come il Mutation Testing e i test di performance, richiedono tempi di esecuzione significativamente più lunghi rispetto ai test tradizionali. Per questo motivo tali verifiche vengono eseguite solo in condizioni specifiche.
+
+Nel caso di studio, l'esecuzione dei test ad alto costo computazionale può essere attivata in due modi:
+
+\begin{itemize}
+	\item manualmente tramite il parametro della pipeline \texttt{RUN\_HEAVY};
+	\item automaticamente se il messaggio di commit contiene tag specifici come \texttt{[heavy]} o \texttt{[perf]}.
+\end{itemize}
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: PIT e Gatling condizionali}
+\label{lst:jenkins-heavy}
+\begin{minted}{groovy}
+	stage('Heavy Tests (optional)') {
+		when {
+			allOf {
+				branch 'dev'
+				anyOf {
+					expression { params.RUN_HEAVY }
+					expression { env.COMMIT_MSG.contains('[heavy]') }
+					expression { env.COMMIT_MSG.contains('[perf]') }
+				}
+			}
+		}
+		steps {
+			sh './mvnw org.pitest:pitest-maven:mutationCoverage'
+			sh './mvnw gatling:test'
+		}
+		post {
+			always {
+				archiveArtifacts artifacts: 'target/pit-reports/**', fingerprint: true
+				archiveArtifacts artifacts: 'target/gatling/**', fingerprint: true
+			}
+		}
+	}
+\end{minted}
+
+\subsection{Analisi statica e Quality Gate con SonarQube}
+\label{sub:sonar}
+
+Per la valutazione automatica della qualità del codice è stato integrato SonarQube all'interno della pipeline Jenkins. L'analisi statica viene eseguita sul branch \texttt{dev} e utilizza i report di copertura generati da JaCoCo.
+
+Al termine dell'analisi viene valutato il \textit{Quality Gate}, che rappresenta un insieme di criteri minimi di qualità (ad esempio copertura del codice, presenza di bug o code smells). Nel caso in cui il Quality Gate non venga superato, la pipeline viene interrotta.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: analisi SonarQube}
+\label{lst:jenkins-sonar-analysis}
+\begin{minted}{groovy}
+	stage('Sonar Analysis') {
+		when { branch 'dev' }
+		steps {
+			withSonarQubeEnv('sonar') {
+				script {
+					def reports = 'target/site/jacoco/jacoco.xml'
+					if (fileExists('target/pit-reports/jacoco.xml')) {
+						reports += ',target/pit-reports/jacoco.xml'
+					}
+					sh """
+					./mvnw sonar:sonar \
+					-Dsonar.coverage.jacoco.xmlReportPaths=${reports}
+					"""
+				}
+			}
+		}
+	}
+\end{minted}
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: verifica del Quality Gate}
+\label{lst:jenkins-quality-gate}
+\begin{minted}{groovy}
+	stage('Quality Gate') {
+		when { branch 'dev' }
+		steps {
+			timeout(time: 10, unit: 'MINUTES') {
+				waitForQualityGate abortPipeline: true
+			}
+		}
+	}
+\end{minted}
+
+Al termine dell’analisi, SonarQube mette a disposizione una dashboard che sintetizza lo stato qualitativo del progetto attraverso diverse metriche. Tra queste risultano particolarmente rilevanti l’esito del \textit{Quality Gate}, la copertura del codice e il numero di problemi individuati dall’analisi statica.
+
+La Figura~\ref{fig:sonar-quality-gate} mostra la pagina principale del progetto su SonarQube, nella quale è possibile osservare immediatamente l’esito del \textit{Quality Gate}. La Figura~\ref{fig:sonar-overview} riporta invece la sezione \textit{Overview}, che raccoglie le principali metriche di qualità del progetto. Infine, la Figura~\ref{fig:sonar-issues} mostra la lista dei problemi individuati dall’analisi statica, tra cui \textit{code smells} e potenziali bug.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{sonar-main.jpg}
+	\caption{Pagina principale del progetto su SonarQube con l'esito del Quality Gate.}
+	\label{fig:sonar-quality-gate}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{sonar-overview.jpg}
+	\caption{Vista Overview di SonarQube con le principali metriche di qualità del progetto.}
+	\label{fig:sonar-overview}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{sonar-issues.jpg}
+	\caption{Sezione Issues di SonarQube con i problemi individuati dall'analisi statica del codice.}
+	\label{fig:sonar-issues}
+\end{figure}
+
+\subsection{Build di rilascio e packaging in produzione}
+\label{sub:release}
+
+Sul branch \texttt{main} la pipeline esegue una build di produzione e produce un’immagine Docker tramite \texttt{jib:build} per costruire l’immagine senza richiedere un Dockerfile esplicito per il backend, pubblicandola su un registry locale.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto Jenkinsfile: build di rilascio e pubblicazione immagine}
+\label{lst:jenkins-release}
+\begin{minted}{groovy}
+	stage('Release Build') {
+		when { branch 'main' }
+		steps {
+			sh './mvnw -ntp -Pprod clean package -DskipTests'
+			sh """
+			./mvnw -Pprod jib:build \
+			-Djib.to.image=localhost:15000/noticeme:${env.GIT_COMMIT}
+			"""
+		}
+	}
+\end{minted}
+
+\subsubsection{Come fare deploy}
+Una volta pubblicata l’immagine nel registry, il deploy può essere eseguito in modo relativamente semplice sul nodo di destinazione. il server che ospita l’applicazione scarica l’immagine dal registry e avvia un nuovo container passando la configurazione necessaria, ad esempio il profilo \texttt{prod} e i parametri di connessione al database MySQL. In uno scenario semplificato, il deploy consiste quindi in tre passaggi: recupero dell’immagine, avvio del container e verifica del corretto avvio del servizio.
+
+Un possibile comando di esecuzione è il seguente:
+
+\begin{listing}[H]
+\caption{Esempio semplificato di deploy del container}
+\label{lst:docker-run-deploy}
+\begin{minted}{bash}
+docker pull localhost:15000/noticeme:<tag>
+
+docker run -d \
+--name noticeme-app \
+-p 8080:8080 \
+-e SPRING_PROFILES_ACTIVE=prod \
+-e SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/noticeme \
+-e SPRING_DATASOURCE_USERNAME=noticeme \
+-e SPRING_DATASOURCE_PASSWORD=noticeme \
+localhost:15000/noticeme:<tag>
+\end{minted}
+\end{listing}

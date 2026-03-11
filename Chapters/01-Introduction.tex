@@ -1,0 +1,19 @@
+% !TEX root = ../Thesis.tex
+
+\chapter{Introduzione}
+
+Lo sviluppo software è in continua evoluzione e negli ultimi anni è passato da modelli prevalentemente ad hoc e manuali a processi strutturati e in gran parte automatizzati. In particolare, metodologie come lo \textit{Sviluppo guidato dai test} (TDD) e le pratiche di \textit{Integrazione Continua} (CI) sono diventate la base per produrre software affidabile, manutenibile e scalabile.
+
+L’effettiva adozione di tali pratiche dipende però dagli strumenti e dai framework utilizzati in fase di progettazione e sviluppo. L’architettura iniziale del progetto, il codice generato automaticamente e le configurazioni degli strumenti di build, come \textit{Maven}, possono infatti facilitare oppure ostacolare l’applicazione concreta di queste metodologie.
+
+In questo contesto si inserisce \textit{\textbf{JHipster}}, un framework open source per la generazione di applicazioni web full-stack, che utilizza  \textit{Spring Boot} lato backend e framework moderni come \textit{Angular}, \textit{React} o \textit{Vue} lato frontend.
+
+Questa tesi si propone di valutare in che misura il framework JHipster supporti:
+\begin{itemize}
+	\item la progettazione, scrittura ed esecuzione di test unitari e di integrazione secondo un approccio \textit{TDD} e \textit{BDD}.
+	\item la configurazione di una pipeline di \textit{Continuous Integration} (CI) per automatizzare build, test e distribuzione.
+\end{itemize}
+
+L’analisi viene condotta attraverso la realizzazione di un’applicazione web per la gestione di note personali, caratterizzata dalla presenza di relazioni molti-a-molti tra le entità del dominio. Il progetto rappresenta un banco di prova per verificare l’integrazione tra codice generato, logica di business, strumenti di testing e automazione.
+
+La struttura della tesi è la seguente. Nel Capitolo~2 vengono richiamati i fondamenti teorici di TDD e CI. Il Capitolo~3 è dedicato alla descrizione del framework JHipster. Nel Capitolo~4 viene presentata l'applicazione sviluppata e l'integrazione dei test nel progetto. Il Capitolo~5 descrive la configurazione della pipeline di Continuous Integration. Il Capitolo~6 riporta l’analisi comparativa dei risultati ottenuti, mentre il Capitolo~7 presenta le conclusioni del lavoro.
