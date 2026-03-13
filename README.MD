@@ -1,7 +1,7 @@
 # Thesis
 Notice me project thesis
 
-Git repo:
+Git repo: https://github.com/GiovanniPag/noticeme.git
 
 ## Compile
 ```bash
