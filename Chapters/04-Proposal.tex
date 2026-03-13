@@ -5,11 +5,11 @@
 
 Questo capitolo descrive il caso di studio utilizzato per valutare concretamente l’applicabilità di metodologie TDD, BDD e pratiche di integrazione continua in un progetto generato con JHipster. L’obiettivo non è presentare un prodotto completo in senso commerciale, bensì un dominio sufficientemente realistico e con complessità adeguata per mettere in evidenza vantaggi e limiti  nell'utilizzare JHipster.
 
-L'applicazione è ispirata, a livello concettuale, a servizi dei gestione delle note come Google Keep. L'app dovrà consentire a tutti gli utenti di creare, modificare ed eliminare note, organizzandole tramite etichette (tag) e associando eventuali allegati.
+L'applicazione è ispirata, a livello concettuale, a servizi di gestione delle note come Google Keep. L'app dovrà consentire a tutti gli utenti di creare, modificare ed eliminare note, organizzandole tramite etichette (tag) e associando eventuali allegati.
 
 \section{Setup del progetto e scelte architetturali}
 \label{sec:setup-architettura}
-Il progetto è stato generato tramite il CLI JHipster v8.11.0 come applicazione monolitica, scelta motivata dal fatto che consente di concentrare l’analisi sulle pratiche di testing e automazione, evitando la complessità aggiuntiva tipica di un’architettura a microservizi. Di seguito elenco le opzioni che il CLI mette a disposizione al momento della creazione:
+Il progetto è stato generato tramite il CLI JHipster v8.11.0 come applicazione monolitica, scelta motivata dal fatto che consente di concentrare l’analisi sulle pratiche di testing e automazione, evitando la complessità aggiuntiva tipica di un’architettura a microservizi. Di seguito sono riportate le principali opzioni rese disponibili dal CLI durante la fase di generazione del progetto:
 
 \begin{itemize}
 	\item Nome dell’applicazione: \chosen{NoticeMe};
@@ -108,7 +108,7 @@ La relazione molti-a-molti tra \texttt{Note} e \texttt{Tag} permette di modellar
 
 A livello JPA, ciò si traduce nell’uso di \texttt{@ManyToMany} e della configurazione della join table. In assenza di requisiti particolari, lo sviluppatore non deve intervenire manualmente su tale configurazione, che risulta già funzionante \textit{out of the box}.
 
-\begin{figure}[tbp]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=\textwidth]{jhipster-jdl.png}
 	\caption{Schema concettuale del dominio e relazione molti-a-molti tra note e tag.}
@@ -124,7 +124,7 @@ L’applicazione sfrutta il sistema di autenticazione integrato in JHipster per 
 \label{sec:tdd}
 Questa sezione analizza l’applicazione del Test-Driven Development (TDD) all’interno del caso di studio sviluppato con JHipster. L’analisi viene condotta attraverso l’introduzione di test aggiuntivi relativi a vincoli di dominio non coperti dal semplice scaffolding CRUD.
 
-Il TDD prevede che la scrittura del test preceda l’implementazione della funzionalità. In un progetto generato con JHipster, tuttavia, una parte significativa del codice applicativo e una suite iniziale di test vengono prodotti automaticamente. Ciò non rende impossibile l’adozione del TDD fin da subito: il TDD viene applicato in modo \emph{incrementale} sulle funzionalità aggiuntive o sui vincoli che emergono durante l’evoluzione del progetto.
+Il TDD prevede che la scrittura del test preceda l’implementazione della funzionalità \cite{Beck2002,BettiniTDD}. In un progetto generato con JHipster, tuttavia, una parte significativa del codice applicativo e una suite iniziale di test vengono prodotti automaticamente. Ciò non rende impossibile l’adozione del TDD fin da subito: il TDD viene applicato in modo \emph{incrementale} sulle funzionalità aggiuntive o sui vincoli che emergono durante l’evoluzione del progetto.
 
 \subsection{Analisi dei test generati automaticamente da JHipster}
 \label{subsec:test-generati}
@@ -335,9 +335,7 @@ L'utente autenticato viene recuperato tramite \texttt{SecurityUtils.getCurrentUs
 \subsubsection{Fase Refactor: consolidamento e pulizia}
 \label{subsec:refactor}
 
-Una volta superato il test, il codice è stato rifinito separando chiaramente la logica di validazione dal resto del flusso di aggiornamento. In particolare, il controllo è stato estratto nel metodo privato \texttt{validateOwnedTags(...)}, con due vantaggi principali.
-
-Il vantaggio è la riduzione della duplicazione: lo stesso controllo può essere richiamato non solo in \texttt{update(...)}, ma anche in \texttt{save(...)} e in \texttt{partialUpdate(...)}.
+Una volta superato il test, il codice è stato rifinito separando chiaramente la logica di validazione dal resto del flusso di aggiornamento \cite{Fowler2018}. In particolare, il controllo è stato estratto nel metodo privato \texttt{validateOwnedTags(...)}, con il vantaggio di ridurre la duplicazione: lo stesso controllo può essere richiamato non solo in \texttt{update(...)}, ma anche in \texttt{save(...)} e in \texttt{partialUpdate(...)}.
 
 \subsection{Testing della relazione molti-a-molti Note--Tag}
 \label{sec:test-moltimolti}
@@ -547,7 +545,7 @@ And his last name is 'Administrator'
 \end{minted}
 \end{listing}
 
-\begin{figure}[tbp]
+\begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{cucumber.JPG}
 	\caption{report di cucumber.}
@@ -557,7 +555,7 @@ And his last name is 'Administrator'
 \section{End-to-End Testing con Cypress}
 \label{sec:cypress}
 
-Per testare l'applicazione dal punto di vista dell'utente finale viene integrato Cypress, uno strumento dedicato ai test end-to-end per applicazioni web. Cypress consente di eseguire il browser in modalità controllata e simulare interazioni reali con l'interfaccia Angular, verificando non solo la correttezza delle singole chiamate HTTP, ma soprattutto il comportamento complessivo dell'applicazione durante l'interazione utente.
+Per testare l'applicazione dal punto di vista dell'utente finale viene integrato Cypress, uno strumento dedicato ai test end-to-end per applicazioni web. Cypress consente di eseguire il browser in modalità controllata e simulare interazioni reali con l'interfaccia Angular, verificando non solo la correttezza delle singole chiamate HTTP, ma soprattutto il comportamento complessivo dell'applicazione durante l'interazione utente \cite{CypressDocs}.
 
 I test Cypress auto generati dal progetto coprono già diversi aspetti dell’applicazione, in particolare:
 
@@ -635,55 +633,211 @@ i test Cypress possono essere lanciati sia in ambiente di sviluppo sia in modali
 \section{Mutation Testing con PIT}
 \label{sec:pit}
 
-Per valutare la robustezza effettiva della suite dei test è stato introdotto il mutation testing tramite PIT (Pitest). A differenza della semplice copertura del codice, il mutation testing introduce modifiche artificiali nel codice sorgente, chiamate \textit{mutanti}, per verificare se i test sono in grado di individuare tali variazioni. Se un mutante viene rilevato da almeno un test, esso viene considerato ``ucciso''; in caso contrario, indica una possibile debolezza nella suite di test.
+Per valutare non solo la copertura del codice ma anche l'effettiva capacità dei test di individuare errori nel comportamento del sistema, è possibile introdurre il \textit{mutation testing} tramite lo strumento PIT (\textit{Pitest}). 
 
-Per utilizzare PIT con maven basta introdurre la configurazione nel pom.xml.
+A differenza della semplice copertura del codice, il mutation testing introduce modifiche artificiali nel codice sorgente, chiamate \textit{mutanti}, per verificare se i test sono in grado di individuare tali variazioni. Se un mutante viene rilevato da almeno un test, esso viene considerato ``ucciso''; in caso contrario, indica una possibile debolezza nella suite di test \cite{BettiniTDD,PITDocs}.
+
+Per integrare PIT con JHipster basterà aggiungere il plugin con maven tramite la configurazione del pom.xml. come mostrato nel Listing~\ref{lst:pit-plugin}.
 
 \captionsetup{type=listing}
 \captionof{listing}{Configurazione Maven del plugin PIT}
 \label{lst:pit-plugin}
 \begin{minted}{xml}
-	<plugin>
+<plugin>
 	<groupId>org.pitest</groupId>
 	<artifactId>pitest-maven</artifactId>
-	<version>\${pitest.version}</version>
+	<version>${pitest.version}</version>
+	<dependencies>
+		<dependency>
+			<groupId>org.pitest</groupId>
+			<artifactId>pitest-junit5-plugin</artifactId>
+			<version>${pitest-junit5.version}</version>
+		</dependency>
+	</dependencies>
 	<configuration>
-	<targetClasses>
-	<param>com.giovannip.*</param>
-	</targetClasses>
-	<targetTests>
-	<param>com.giovannip.*Test</param>
-	</targetTests>
-	<mutationThreshold>80</mutationThreshold>
-	<avoidCallsTo>
-	<param>java.util.logging</param>
-	<param>org.slf4j</param>
-	</avoidCallsTo>
-	<threads>4</threads>
-	<outputFormats>
-	<param>HTML</param>
-	</outputFormats>
+		<targetClasses>
+			<param>com.giovannip.*</param>
+		</targetClasses>
+		<targetTests>
+			<param>com.giovannip.*</param>
+		</targetTests>
+		<excludedClasses>
+			<param>com.giovannip.noticeme.service.mapper.*MapperImpl</param>
+		</excludedClasses>
+		<excludedTestClasses>
+			<param>com.giovannip.noticeme.TechnicalStructureTest</param>
+			<param>com.giovannip.noticeme.*Architecture*</param>
+			<param>com.giovannip.noticeme.*ArchUnit*</param>
+			<param>com.giovannip.noticeme.*Structure*</param>
+			<param>com.giovannip.noticeme.cucumber.*</param>
+			<param>gatling.simulations.*</param>
+		</excludedTestClasses>
+		<mutationThreshold>1</mutationThreshold>
+		<avoidCallsTo>
+			<param>java.util.logging</param>
+			<param>org.slf4j</param>
+		</avoidCallsTo>
+		<threads>4</threads>
+		<outputFormats>
+			<param>HTML</param>
+		</outputFormats>
 	</configuration>
-	</plugin>
+</plugin>
 \end{minted}
 
-\todo{mostrare i risultati del pitest}
+L'esecuzione dell'analisi avviene tramite il comando seguente; naturalmente, PIT è in grado di produrre un risultato significativo solo se la suite di test viene eseguita senza errori:
+
+\begin{minted}{bash}
+	./mvnw org.pitest:pitest-maven:mutationCoverage
+\end{minted}
+
+Al termine dell'esecuzione, PIT genera automaticamente un report HTML contenente statistiche dettagliate sul numero di mutanti generati, sul numero di mutanti uccisi dai test e sui mutanti sopravvissuti. Il report permette inoltre di analizzare a livello di singola classe quali mutazioni non vengono rilevate dalla suite di test.
+
+La Figura~\ref{fig:pit-overview} mostra un esempio della schermata principale del report generato da PIT.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{pit-overview.png}
+	\caption{Panoramica del report generato da Pitest.}
+	\label{fig:pit-overview}
+\end{figure}
+
+I risultati ottenuti nel caso di studio mostrano che, nonostante una buona copertura strutturale del codice evidenziata dai report JaCoCo, una parte significativa dei mutanti sopravvive all'esecuzione dei test. Questo risultato è coerente con la natura della suite di test del progetto, composta in larga misura da test di integrazione orientati alla verifica del comportamento dell'applicazione tramite API REST. Sebbene tali test coprano ampie porzioni di codice, nella configurazione generata da JHipster essi non contribuiscono in modo efficace all'analisi di mutation testing condotta da PIT, che in questo contesto si focalizza sui soli test unitari.
 
 \section{Performance Testing con Gatling}
 \label{sec:gatling}
 
-JHipster integra automaticamente Gatling come strumento per l'esecuzione di test di performance sulle API REST. Gatling consente di simulare un numero elevato di utenti concorrenti e di raccogliere metriche quali tempo medio di risposta, throughput e percentili di latenza.
+JHipster può integrare automaticamente Gatling come strumento per l'esecuzione di test di performance sulle API REST. Gatling consente di simulare un numero elevato di utenti concorrenti e di raccogliere metriche quali tempo medio di risposta, throughput e percentili di latenza \cite{GatlingDocs}.
 
-\todo{mostrare e analizzare i test pregenerati}
+Nel progetto generato, Gatling è integrato tramite dipendenze Maven e tramite il plugin \texttt{gatling-maven-plugin}, che consente di eseguire le simulazioni direttamente durante la fase di testing del progetto.
 
-Nel contesto della presente tesi i test di performance non costituiscono il focus principale dell'analisi. Tuttavia, la presenza di Gatling all'interno dello stack JHipster dimostra come l'ecosistema supporti anche la verifica di requisiti non funzionali, permettendo di estendere il processo di testing oltre i livelli unitari e di integrazione.
+Le simulazioni Gatling generate automaticamente da JHipster si trovano nel package \texttt{gatling.simulations}. Per ogni entità REST esposta dall'applicazione viene creata una simulazione che verifica il comportamento delle principali operazioni CRUD sotto carico.
+
+\subsection{Struttura dei test pregenerati}
+La simulazione \texttt{NoteGatlingTest} esegue una sequenza di richieste HTTP che riproduce un utilizzo realistico dell'API dell'applicazione.
+
+Lo scenario segue la sequenza:
+
+\begin{itemize}
+	\item tentativo di accesso senza autenticazione;
+	\item autenticazione tramite endpoint \texttt{/api/authenticate};
+	\item verifica dell'accesso autenticato all'endpoint \texttt{/api/account};
+	\item esecuzione delle principali operazioni CRUD sull'entità \texttt{Note}.
+\end{itemize}
+
+Il Listing~\ref{lst:gatling-scenario} mostra un estratto dello scenario principale della simulazione.
+
+\captionsetup{type=listing}
+\captionof{listing}{Estratto della simulazione Gatling per l'entità Note}
+\label{lst:gatling-scenario}
+\begin{minted}{java}
+	ChainBuilder scn =
+	exec(http("First unauthenticated request")
+	.get("/api/account")
+	.check(status().is(401)))
+	
+	.exec(http("Authentication")
+	.post("/api/authenticate")
+	.body(StringBody("{\"username\":\"admin\",\"password\":\"admin\"}"))
+	.check(header("Authorization").saveAs("access_token")))
+	
+	.exec(http("Authenticated request")
+	.get("/api/account")
+	.check(status().is(200)))
+	
+	.exec(http("Get all notes")
+	.get("/api/notes"))
+	
+	.exec(http("Create new note")
+	.post("/api/notes"));
+	
+	 exec(http("Get created note")
+	.get("#{new_note_url}")
+	
+	.exec(http("Delete created note")
+	.delete("#{new_note_url}")
+\end{minted}
+
+Questo scenario consente di verificare non solo la correttezza delle risposte HTTP, ma anche il comportamento delle API in presenza di richieste concorrenti.
+
+\subsection{Simulazione del carico}
+Il carico viene introdotto tramite la strategia \texttt{rampUsers}, che simula un aumento progressivo degli utenti virtuali.
+
+\captionsetup{type=listing}
+\captionof{listing}{Configurazione dell'iniezione di utenti virtuali}
+\begin{minted}{java}
+	setUp(
+	users.injectOpen(
+	rampUsers(Integer.getInteger("users", 100))
+	.during(Duration.ofMinutes(Integer.getInteger("ramp", 1)))
+	)
+	);
+\end{minted}
+
+Nella configurazione predefinita, Gatling simula 100 utenti virtuali distribuiti nell'arco di 1 minuto. Questo approccio consente di osservare come il sistema reagisce all'aumento progressivo del carico, evitando picchi improvvisi di richieste. I parametri possono essere modificati durante l'esecuzione del test, permettendo di adattare facilmente il carico simulato. Per eseguire i test Gatling è necessario che l'applicazione sia già in esecuzione su una porta raggiungibile; per questo motivo tali test risultano particolarmente adatti a essere eseguiti in ambienti di staging o di integrazione continua, piuttosto che durante lo sviluppo locale.
+
+\begin{minted}{shell}
+	./mvnw gatling:test -Dusers=200 -Dramp=2
+\end{minted}
+
+Al termine dell'esecuzione Gatling genera automaticamente un report HTML contenente le principali metriche di performance come si può vedere nella Figura~\ref{fig:gatling-report}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{gatling-overview.png}
+	\caption{Panoramica del report di performance generato da Gatling al termine della simulazione.}
+	\label{fig:gatling-report}
+\end{figure}
+
+\subsection{Analisi dei report di performance}
+
+I report generati da Gatling includono informazioni quali:
+
+\begin{itemize}
+	\item numero totale di richieste
+	\item percentuale di richieste riuscite e fallite
+	\item tempo minimo, medio e massimo di risposta
+	\item percentili di latenza (quanto velocemente risponde il sistema nella maggior parte dei casi)
+	\item throughput nel tempo (numero di richieste gestite dal sistema per secondo)
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{gatling-response-time.png}
+	\caption{Distribuzione dei tempi di risposta durante l'esecuzione del test di carico.}
+	\label{fig:gatling-response}
+\end{figure}
+
+
+Questi grafici consentono di identificare eventuali colli di bottiglia nelle API e di valutare la scalabilità del sistema sotto carico.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{gatling-throughput.png}
+	\caption{Throughput del sistema espresso come numero di richieste al secondo durante la simulazione.}
+	\label{fig:gatling-throughput}
+\end{figure}
+
+\subsection{Personalizzazione degli scenari di test}
+
+I test generati automaticamente rappresentano una base iniziale per il performance testing. In contesti reali, tuttavia, è spesso necessario personalizzare gli scenari per riflettere in modo più accurato i comportamenti degli utenti.
+
+Tra le principali estensioni possibili vi sono la simulazione di diversi profili di utenti (ad esempio utenti anonimi e autenticati, admin e normali), diverse sequenze di chiamate API che emulano diversi comportamenti sull'app, aumento progressivo del numero di utenti virtuali per valutare la scalabilità del sistema.
+
+Gatling supporta inoltre strategie di iniezione più avanzate, come \texttt{constantUsersPerSec} o \texttt{stressPeakUsers}, che permettono di simulare scenari di carico più complessi.
+
+\subsection{Ruolo del performance testing nel contesto della tesi}
+
+Nel contesto della presente tesi i test di performance non costituiscono il focus principale dell'analisi, che è invece orientata alle pratiche di testing automatizzato e Continuous Integration.
+
+Tuttavia, la presenza di Gatling all'interno dello stack JHipster dimostra come il framework favorisca un processo di verifica della qualità del software più ampio, includendo anche la validazione di requisiti non funzionali quali prestazioni e scalabilità.
 
 \chapter{Integrazione continua nel caso di studio}
 \label{cap:ci}
 
 Questo capitolo descrive l’infrastruttura di Continuous Integration e le scelte effettuate per automatizzare build, test e analisi di qualità del progetto. La soluzione adottata consiste in un ambiente CI locale basato su Jenkins e Docker, integrato con SonarQube, un registry Docker locale e gli strumenti di test discussi nei capitoli precedenti.
 
-JHipster mette a disposizione configurazioni pronte per pipeline CI attraverso il CLI (ad esempio per GitHub Actions, GitLab CI o Jenkins). Tuttavia, nel caso di studio tali configurazioni non risultavano pienamente compatibili con le esigenze del progetto; per questo motivo è stato realizzato un \texttt{Jenkinsfile} personalizzato, affiancato da un file \texttt{docker-compose} per la creazione di una pipeline CI locale.
+JHipster mette a disposizione configurazioni pronte per pipeline CI attraverso il CLI (ad esempio per GitHub Actions, GitLab CI o Jenkins). Tuttavia, nel caso di studio tali configurazioni non risultavano pienamente compatibili con le esigenze del progetto; per questo motivo è stato realizzato un \texttt{Jenkinsfile} personalizzato, affiancato da un file \texttt{docker-compose} per la creazione di una pipeline CI locale \cite{JHipsterDocs,JenkinsDocs,DockerDocs}.
 
 \section{Infrastruttura CI locale basata su Docker}
 \label{sec:infra-docker}
@@ -830,10 +984,33 @@ Nel caso di studio, l'esecuzione dei test ad alto costo computazionale può esse
 		}
 		steps {
 			sh './mvnw org.pitest:pitest-maven:mutationCoverage'
+			sh './mvnw -ntp -Pdev,webapp -DskipTests package'
+			sh '''
+				nohup java -jar target/*.jar > app.log 2>&1 &
+				echo $! > app.pid
+			'''
+			
+			sh '''
+				for i in $(seq 1 60); do
+					if curl -fsS http://localhost:8080/management/health | grep -q '"status":"UP"'; then
+						echo "Application is UP"
+						exit 0
+					fi
+					sleep 5
+				done
+				echo "Application failed to start"
+				tail -100 app.log || true
+				exit 1
+			'''  
 			sh './mvnw gatling:test'
 		}
 		post {
 			always {
+				sh '''
+					if [ -f app.pid ]; then
+					kill $(cat app.pid) || true
+					fi
+				'''
 				archiveArtifacts artifacts: 'target/pit-reports/**', fingerprint: true
 				archiveArtifacts artifacts: 'target/gatling/**', fingerprint: true
 			}
@@ -844,7 +1021,7 @@ Nel caso di studio, l'esecuzione dei test ad alto costo computazionale può esse
 \subsection{Analisi statica e Quality Gate con SonarQube}
 \label{sub:sonar}
 
-Per la valutazione automatica della qualità del codice è stato integrato SonarQube all'interno della pipeline Jenkins. L'analisi statica viene eseguita sul branch \texttt{dev} e utilizza i report di copertura generati da JaCoCo.
+Per la valutazione automatica della qualità del codice è stato integrato SonarQube all'interno della pipeline Jenkins. L'analisi statica viene eseguita sul branch \texttt{dev} e utilizza i report di copertura generati da JaCoCo \cite{SonarQubeDocs}.
 
 Al termine dell'analisi viene valutato il \textit{Quality Gate}, che rappresenta un insieme di criteri minimi di qualità (ad esempio copertura del codice, presenza di bug o code smells). Nel caso in cui il Quality Gate non venga superato, la pipeline viene interrotta.
 
@@ -863,7 +1040,7 @@ Al termine dell'analisi viene valutato il \textit{Quality Gate}, che rappresenta
 					}
 					sh """
 					./mvnw sonar:sonar \
-					-Dsonar.coverage.jacoco.xmlReportPaths=${reports}
+					-Dsonar.coverage.jacoco.xmlReportPaths=\${reports}
 					"""
 				}
 			}
@@ -878,7 +1055,7 @@ Al termine dell'analisi viene valutato il \textit{Quality Gate}, che rappresenta
 	stage('Quality Gate') {
 		when { branch 'dev' }
 		steps {
-			timeout(time: 10, unit: 'MINUTES') {
+			timeout(time: 20, unit: 'MINUTES') {
 				waitForQualityGate abortPipeline: true
 			}
 		}
@@ -887,23 +1064,23 @@ Al termine dell'analisi viene valutato il \textit{Quality Gate}, che rappresenta
 
 Al termine dell’analisi, SonarQube mette a disposizione una dashboard che sintetizza lo stato qualitativo del progetto attraverso diverse metriche. Tra queste risultano particolarmente rilevanti l’esito del \textit{Quality Gate}, la copertura del codice e il numero di problemi individuati dall’analisi statica.
 
-La Figura~\ref{fig:sonar-quality-gate} mostra la pagina principale del progetto su SonarQube, nella quale è possibile osservare immediatamente l’esito del \textit{Quality Gate}. La Figura~\ref{fig:sonar-overview} riporta invece la sezione \textit{Overview}, che raccoglie le principali metriche di qualità del progetto. Infine, la Figura~\ref{fig:sonar-issues} mostra la lista dei problemi individuati dall’analisi statica, tra cui \textit{code smells} e potenziali bug.
+La Figura~\ref{fig:sonar-quality-gate} mostra la pagina principale del progetto su SonarQube, nella quale è possibile osservare immediatamente l’esito del \textit{Quality Gate}. La Figura~\ref{fig:sonar-overview-img} riporta invece la sezione \textit{Overview}, che raccoglie le principali metriche di qualità del progetto. Infine, la Figura~\ref{fig:sonar-issues} mostra la lista dei problemi individuati dall’analisi statica, tra cui \textit{code smells} e potenziali bug.
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{sonar-main.jpg}
 	\caption{Pagina principale del progetto su SonarQube con l'esito del Quality Gate.}
 	\label{fig:sonar-quality-gate}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{sonar-overview.jpg}
 	\caption{Vista Overview di SonarQube con le principali metriche di qualità del progetto.}
-	\label{fig:sonar-overview}
+	\label{fig:sonar-overview-img}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{sonar-issues.jpg}
 	\caption{Sezione Issues di SonarQube con i problemi individuati dall'analisi statica del codice.}
@@ -913,7 +1090,7 @@ La Figura~\ref{fig:sonar-quality-gate} mostra la pagina principale del progetto 
 \subsection{Build di rilascio e packaging in produzione}
 \label{sub:release}
 
-Sul branch \texttt{main} la pipeline esegue una build di produzione e produce un’immagine Docker tramite \texttt{jib:build} per costruire l’immagine senza richiedere un Dockerfile esplicito per il backend, pubblicandola su un registry locale.
+Sul branch \texttt{main} la pipeline esegue una build di produzione e produce un’immagine Docker tramite \texttt{jib:build} \cite{JibDocs} per costruire l’immagine senza richiedere un Dockerfile esplicito per il backend, pubblicandola su un registry locale.
 
 \captionsetup{type=listing}
 \captionof{listing}{Estratto Jenkinsfile: build di rilascio e pubblicazione immagine}

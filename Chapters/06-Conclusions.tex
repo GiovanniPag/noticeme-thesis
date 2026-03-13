@@ -3,33 +3,39 @@
 \chapter{Conclusioni e sviluppi futuri}
 \label{cap:conclusions}
 
-La presente tesi ha analizzato in che misura un framework di generazione full-stack come JHipster possa supportare l’adozione di metodologie orientate alla qualità del software, con particolare riferimento a Test-Driven Development (TDD), Behavior-Driven Development (BDD) e Continuous Integration (CI). L’indagine è stata condotta attraverso un duplice percorso: da un lato l’inquadramento teorico delle metodologie considerate, dall’altro la realizzazione e la valutazione di un caso di studio concreto sviluppato a partire da uno scaffolding generato dal framework.
+La presente tesi ha analizzato il ruolo dei framework di generazione full-stack nello sviluppo di applicazioni web moderne, con particolare attenzione al supporto che tali strumenti offrono alle pratiche di qualità del software. In particolare, il lavoro si è concentrato sul framework JHipster e sulla sua capacità di supportare metodologie come Test-Driven Development (TDD), Behavior-Driven Development (BDD) e Continuous Integration (CI) \cite{Beck2002,North2006,Fowler2006CI,JHipsterDocs}.
+
+L'indagine è stata condotta attraverso due prospettive complementari: da un lato l'analisi teorica delle metodologie e degli strumenti di testing e automazione; dall'altro la realizzazione e la valutazione empirica di un caso di studio concreto sviluppato a partire da uno scaffolding generato automaticamente da JHipster.
 
 \section{Sintesi del lavoro svolto}
 
-Nel corso del lavoro è stata progettata e sviluppata un’applicazione di gestione note, caratterizzata da un dominio sufficientemente realistico da consentire l’osservazione di problematiche tipiche dello sviluppo software moderno: relazioni molti-a-molti, vincoli di proprietà dei dati, personalizzazione del comportamento CRUD generato automaticamente e adattamento dell’interfaccia utente rispetto allo scaffolding iniziale.
+Nel corso della tesi è stata progettata e sviluppata un'applicazione web di gestione delle note basata su JHipster. Il progetto ha permesso di analizzare in modo pratico l'interazione tra codice generato automaticamente, personalizzazione del dominio applicativo e introduzione progressiva di pratiche di quality assurance.
 
-Su questa base sono stati analizzati diversi livelli di testing e automazione. In particolare, il progetto ha integrato test di integrazione backend, test frontend con Jest, scenari BDD con Cucumber, test end-to-end con Cypress, mutation testing con PIT e analisi statica con SonarQube all’interno di una pipeline CI locale realizzata con Jenkins e Docker.
+L'applicazione sviluppata include funzionalità tipiche di un sistema di gestione delle note, tra cui creazione e modifica delle note, associazione di tag e gestione di allegati. Durante lo sviluppo sono state introdotte modifiche allo scaffolding iniziale per adattare il comportamento dell'applicazione alle esigenze del dominio e per sperimentare l'integrazione di diverse strategie di testing.
 
-L’esperienza maturata ha mostrato che JHipster consente di partire rapidamente da una base applicativa coerente e già predisposta alla verifica automatizzata. Allo stesso tempo, il caso di studio ha evidenziato che la qualità finale del sistema non dipende unicamente dal codice generato, ma dalla capacità dello sviluppatore di estendere in modo consapevole lo scaffolding iniziale, introducendo test mirati, vincoli di dominio e un processo di integrazione continua adeguato.
+Il progetto ha integrato diversi livelli di verifica automatizzata, tra cui test di integrazione backend con Spring Boot Test, test frontend con Jest, scenari comportamentali con Cucumber, test end-to-end con Cypress, mutation testing con PIT e analisi statica del codice con SonarQube. Tali strumenti sono stati inseriti all'interno di una pipeline di Continuous Integration realizzata tramite Jenkins e Docker \cite{CucumberDocs,CypressDocs,PITDocs,SonarQubeDocs,JenkinsDocs,DockerDocs}.
+
+Questo approccio ha consentito di osservare in modo concreto come un progetto generato automaticamente possa evolvere in un sistema dotato di un processo di verifica strutturato e multilivello, in linea con le pratiche contemporanee di automazione della qualità del software \cite{BettiniTDD}.
 
 \section{Risposta alla domanda di ricerca}
 
-Alla luce dell’analisi teorica e sperimentale, si può concludere che JHipster supporta in modo concreto pratiche di sviluppo orientate alla qualità, ma con intensità differenti a seconda della metodologia considerata.
+Alla luce dell’analisi teorica e sperimentale, si può concludere che JHipster supporta in modo concreto pratiche di sviluppo orientate alla qualità, anche se con livelli di supporto differenti a seconda della metodologia considerata.
 
-Per quanto riguarda il TDD, la struttura architetturale prodotta da JHipster risulta fortemente testabile e rende il TDD particolarmente efficace nella fase evolutiva del progetto, soprattutto quando occorre introdurre regole di business non coperte dallo scaffolding standard.
+Per quanto riguarda il Test-Driven Development, la struttura architetturale generata dal framework — basata su una separazione chiara tra livelli applicativi — favorisce la testabilità del codice e rende relativamente semplice introdurre test durante l'evoluzione dell'applicazione.
 
-Per quanto riguarda il BDD e E2E, JHipster non offre un supporto nativo particolarmente forte, ma risulta compatibile con l’integrazione di strumenti come Cucumber e Cypress. Il BDD appare quindi come una pratica applicabile, utile soprattutto nella formalizzazione di comportamenti ad alto livello, ma dipendente da una scelta metodologica esplicita e dal contesto organizzativo in cui il progetto viene sviluppato.
+Nel caso del Behavior-Driven Development, il supporto offerto dal framework è più indiretto, e non genera automaticamente scenari comportamentali. 
 
-L’ambito in cui JHipster esprime il proprio potenziale in modo più evidente è la Continuous Integration. Il framework facilita infatti la costruzione di pipeline automatizzate, l’integrazione con strumenti di qualità, la containerizzazione e il packaging dell’applicazione, rendendosi particolarmente adatto a contesti di sviluppo orientati all’automazione del processo di build e verifica.
+L'ambito in cui JHipster dimostra il supporto più solido è quello della Continuous Integration. Il framework fornisce infatti configurazioni già predisposte per build automatizzate, containerizzazione e integrazione con strumenti di analisi della qualità del codice. Questo rende relativamente semplice costruire pipeline di integrazione continua anche in ambienti di sviluppo locali o sperimentali.
 
 In termini complessivi, la risposta alla domanda di ricerca può essere formulata come segue: JHipster non impone una metodologia specifica, ma costituisce un abilitatore tecnico efficace per l’adozione disciplinata di pratiche orientate alla qualità, con un supporto particolarmente forte alla Continuous Integration, buono alla testabilità e più indiretto al BDD e E2E.
 
 \section{Principali contributi della tesi}
 
-Il principale contributo del lavoro svolto consiste nell’aver mostrato, attraverso un caso di studio concreto, che la generazione automatica del codice non è in contraddizione con l’adozione di pratiche rigorose di testing e automazione. Al contrario, se utilizzata in modo consapevole, essa può ridurre il costo iniziale di avvio del progetto e consentire di concentrare l’attenzione sugli aspetti a maggior valore applicativo, quali la modellazione del dominio, la qualità dei test e la strutturazione del processo di verifica.
+Il primo contributo di questo lavoro consiste nell'aver mostrato, attraverso un caso di studio concreto, come un framework di generazione automatica del codice possa essere integrato con metodologie di testing e automazione tipiche dello sviluppo software moderno.
 
-Un secondo contributo riguarda la valutazione critica del rapporto tra scaffolding automatico e metodologie test-driven. Il caso di studio ha infatti evidenziato che il codice generato costituisce una buona base iniziale, ma non sostituisce la necessità di progettare esplicitamente i vincoli di dominio, introdurre test significativi e adattare gli strumenti di verifica alle evoluzioni del progetto.
+Il secondo contributo riguarda la valutazione critica dell'interazione tra scaffolding automatico e pratiche test-driven. Il caso di studio ha evidenziato che il codice generato costituisce una base solida per avviare rapidamente un progetto, ma non sostituisce la necessità di progettare esplicitamente i test e le regole di business dell'applicazione.
+
+Un ulteriore risultato emerso riguarda il ruolo dei diversi livelli di testing. Nel caso di studio i test end-to-end realizzati con Cypress si sono rivelati particolarmente efficaci nel rilevare problemi di integrazione tra frontend e backend e difetti dell'interfaccia utente che difficilmente emergono nei test unitari.
 
 Infine, la tesi mostra che anche in un contesto locale, riproducibile e a costo contenuto è possibile costruire un processo di quality assurance articolato, integrando livelli diversi di test, analisi statica e automazione CI in modo coerente con un progetto generato da JHipster.
 
@@ -37,12 +43,12 @@ Infine, la tesi mostra che anche in un contesto locale, riproducibile e a costo 
 
 Il lavoro svolto apre diverse possibili direzioni di approfondimento.
 
-Un primo sviluppo naturale consiste nell’estendere l’analisi a configurazioni architetturali differenti di JHipster, in particolare al paradigma a microservizi. Questo permetterebbe di osservare come TDD, BDD e CI si comportino in presenza di maggiore complessità distribuita, comunicazione tra servizi e pipeline multi-componente.
+Un primo sviluppo naturale consiste nell'estendere l'analisi a configurazioni architetturali differenti di JHipster, in particolare al paradigma a microservizi. Questo permetterebbe di osservare come le pratiche di testing e Continuous Integration si comportino in presenza di maggiore complessità distribuita e comunicazione tra servizi.
 
-Un secondo possibile sviluppo riguarda il rafforzamento della valutazione empirica. Sarebbe utile condurre un confronto sistematico con altri framework o generatori full-stack, oppure con un’applicazione sviluppata manualmente, al fine di valutare con maggiore precisione l’impatto della generazione automatica sul testing e sull’automazione del processo di sviluppo.
+Un secondo possibile sviluppo riguarda il rafforzamento della valutazione empirica. Sarebbe interessante confrontare il processo di sviluppo basato su JHipster con quello di applicazioni realizzate manualmente o con altri generatori full-stack, al fine di valutare con maggiore precisione l'impatto dello scaffolding automatico sulla qualità del software.
 
-Dal punto di vista applicativo, il caso di studio potrebbe essere esteso introducendo funzionalità ulteriori, come la condivisione delle note tra utenti, la gestione di ruoli differenziati, la collaborazione multiutente o meccanismi di notifica. Tali estensioni renderebbero il dominio più ricco e offrirebbero ulteriori occasioni per analizzare vincoli di business complessi e scenari di test avanzati.
+Dal punto di vista applicativo, il caso di studio potrebbe essere esteso introducendo funzionalità più complesse, come meccanismi di collaborazione tra utenti, sistemi di notifica o gestione avanzata dei permessi. Tali estensioni renderebbero il dominio applicativo più ricco e permetterebbero di analizzare scenari di testing ancora più articolati.
 
-Infine, sul piano infrastrutturale, potrebbe risultare interessante portare la pipeline in un contesto cloud o semi-distribuito, integrando registry remoti, ambienti di staging, deployment automatizzato e monitoraggio post-rilascio.
+Infine, sul piano infrastrutturale, potrebbe risultare interessante portare la pipeline in un contesto cloud o semi-distribuito, integrando registry remoti, ambienti di staging, deployment automatizzato e monitoraggio post-rilascio.Infine, potrebbe risultare interessante portare la pipeline di integrazione continua in un ambiente cloud o distribuito, integrando deployment automatizzato, ambienti di staging e strumenti di monitoraggio dell'applicazione in produzione.
 
-In conclusione, il caso di studio conferma che la generazione automatica del software, se accompagnata da consapevolezza metodologica e controllo della qualità, non rappresenta un’alternativa alle buone pratiche di ingegneria del software, ma un possibile acceleratore della loro adozione.
+In conclusione, il caso di studio conferma che i framework di generazione full-stack, se utilizzati con consapevolezza metodologica, non rappresentano un'alternativa alle buone pratiche di ingegneria del software, ma possono costituire un efficace acceleratore per la loro adozione.
