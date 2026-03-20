@@ -19,7 +19,7 @@ Questo approccio ha consentito di osservare in modo concreto come un progetto ge
 
 \section{Risposta alla domanda di ricerca}
 
-Alla luce dell’analisi teorica e sperimentale, si può concludere che JHipster supporta in modo concreto pratiche di sviluppo orientate alla qualità, anche se con livelli di supporto differenti a seconda della metodologia considerata.
+Alla luce dell’analisi teorica e sperimentale, è possibile concludere che JHipster supporta in modo concreto pratiche di sviluppo orientate alla qualità, anche se con livelli di supporto differenti a seconda della metodologia considerata.
 
 Per quanto riguarda il Test-Driven Development, la struttura architetturale generata dal framework — basata su una separazione chiara tra livelli applicativi — favorisce la testabilità del codice e rende relativamente semplice introdurre test durante l'evoluzione dell'applicazione.
 
@@ -27,17 +27,17 @@ Nel caso del Behavior-Driven Development, il supporto offerto dal framework è p
 
 L'ambito in cui JHipster dimostra il supporto più solido è quello della Continuous Integration. Il framework fornisce infatti configurazioni già predisposte per build automatizzate, containerizzazione e integrazione con strumenti di analisi della qualità del codice. Questo rende relativamente semplice costruire pipeline di integrazione continua anche in ambienti di sviluppo locali o sperimentali.
 
-In termini complessivi, la risposta alla domanda di ricerca può essere formulata come segue: JHipster non impone una metodologia specifica, ma costituisce un abilitatore tecnico efficace per l’adozione disciplinata di pratiche orientate alla qualità, con un supporto particolarmente forte alla Continuous Integration, buono alla testabilità e più indiretto al BDD e E2E.
+In termini complessivi, la risposta alla domanda di ricerca può essere formulata come segue: JHipster non impone una metodologia specifica, ma costituisce un abilitatore tecnico efficace per l’adozione disciplinata di pratiche orientate alla qualità, con un supporto particolarmente forte alla Continuous Integration, buono alla testabilità e più indiretto per quanto riguarda il BDD e i test end-to-end.
 
 \section{Principali contributi della tesi}
 
 Il primo contributo di questo lavoro consiste nell'aver mostrato, attraverso un caso di studio concreto, come un framework di generazione automatica del codice possa essere integrato con metodologie di testing e automazione tipiche dello sviluppo software moderno.
 
-Il secondo contributo riguarda la valutazione critica dell'interazione tra scaffolding automatico e pratiche test-driven. Il caso di studio ha evidenziato che il codice generato costituisce una base solida per avviare rapidamente un progetto, ma non sostituisce la necessità di progettare esplicitamente i test e le regole di business dell'applicazione.
+Il secondo contributo riguarda la valutazione critica dell'interazione tra scaffolding automatico e pratiche test-driven. Il caso di studio ha evidenziato come il codice generato costituisca una base solida per avviare rapidamente un progetto, ma non sostituisce la necessità di progettare esplicitamente i test e le regole di business dell'applicazione.
 
-Un ulteriore risultato emerso riguarda il ruolo dei diversi livelli di testing. Nel caso di studio i test end-to-end realizzati con Cypress si sono rivelati particolarmente efficaci nel rilevare problemi di integrazione tra frontend e backend e difetti dell'interfaccia utente che difficilmente emergono nei test unitari.
+Un ulteriore risultato emerso riguarda il ruolo dei diversi livelli di testing. Nel caso di studio, i test end-to-end realizzati con Cypress si sono rivelati particolarmente efficaci nel rilevare problemi di integrazione tra frontend e backend e difetti dell'interfaccia utente che difficilmente emergono nei test unitari.
 
-Infine, la tesi mostra che anche in un contesto locale, riproducibile e a costo contenuto è possibile costruire un processo di quality assurance articolato, integrando livelli diversi di test, analisi statica e automazione CI in modo coerente con un progetto generato da JHipster.
+Infine, la tesi mostra che anche in un contesto locale, riproducibile e a costo contenuto è possibile costruire un processo di quality assurance articolato, integrando livelli diversi di test, analisi statica e automazione CI in modo coerente con le caratteristiche di un progetto generato da JHipster.
 
 \section{Sviluppi futuri}
 
@@ -49,6 +49,6 @@ Un secondo possibile sviluppo riguarda il rafforzamento della valutazione empiri
 
 Dal punto di vista applicativo, il caso di studio potrebbe essere esteso introducendo funzionalità più complesse, come meccanismi di collaborazione tra utenti, sistemi di notifica o gestione avanzata dei permessi. Tali estensioni renderebbero il dominio applicativo più ricco e permetterebbero di analizzare scenari di testing ancora più articolati.
 
-Infine, sul piano infrastrutturale, potrebbe risultare interessante portare la pipeline in un contesto cloud o semi-distribuito, integrando registry remoti, ambienti di staging, deployment automatizzato e monitoraggio post-rilascio.Infine, potrebbe risultare interessante portare la pipeline di integrazione continua in un ambiente cloud o distribuito, integrando deployment automatizzato, ambienti di staging e strumenti di monitoraggio dell'applicazione in produzione.
+Infine, sul piano infrastrutturale, potrebbe risultare interessante portare la pipeline di integrazione continua in un contesto cloud o distribuito, integrando registry remoti, ambienti di staging, deployment automatizzato e strumenti di monitoraggio dell'applicazione in produzione.
 
-In conclusione, il caso di studio conferma che i framework di generazione full-stack, se utilizzati con consapevolezza metodologica, non rappresentano un'alternativa alle buone pratiche di ingegneria del software, ma possono costituire un efficace acceleratore per la loro adozione.
+In conclusione, il caso di studio conferma che i framework di generazione full-stack, se utilizzati con adeguata consapevolezza metodologica, non rappresentano un'alternativa alle buone pratiche di ingegneria del software, ma possono costituire un efficace acceleratore per la loro adozione.

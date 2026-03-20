@@ -27,9 +27,9 @@ La letteratura evidenzia come il TDD contribuisca ad aumentare la copertura dei 
 Il Behavior-Driven Development (BDD) può essere interpretato come un’estensione del TDD con l’obiettivo di colmare il divario comunicativo tra sviluppatori e clienti non tecnici \cite{North2006}. Il BDD propone la formalizzazione dei requisiti sotto forma di scenari scritti in linguaggio naturale. Una delle sintassi più diffuse è Gherkin, che utilizza lo schema:
 
 \begin{minted}{gherkin}
-  Given una condizione iniziale \\
-  When si verifica un’azione \\
-  Then si osserva un risultato atteso
+	Given una condizione iniziale
+	When si verifica un’azione
+	Then si osserva un risultato atteso
 \end{minted}
 
 Tali descrizioni vengono poi collegate al codice eseguibile attraverso framework come Cucumber, che consentono di trasformare gli scenari in test automatizzati. Rispetto al TDD, il BDD opera quindi a un livello di astrazione più elevato, concentrandosi sul comportamento complessivo del sistema e sull’interazione tra i suoi componenti \cite{Smart2014}.
@@ -50,7 +50,7 @@ Negli ultimi anni si sono diffusi strumenti in grado di generare automaticamente
 
 Questi strumenti non si limitano alla produzione del codice applicativo, ma includono spesso configurazioni per la gestione della build, l’organizzazione dei livelli applicativi e, in alcuni casi, il supporto a meccanismi di testing e automazione.
 
-Un esempio di questi strumenti è JHipster, generatori open source di cui parlerò più approfonditamente nel prossimo capitolo \cite{JHipsterDocs}.
+Un esempio di questi strumenti è JHipster, generatore open source di cui parlerò più approfonditamente nel prossimo capitolo \cite{JHipsterDocs}.
 
 \section{Motivazione del presente lavoro}
 

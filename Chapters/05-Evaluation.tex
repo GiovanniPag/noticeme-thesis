@@ -10,7 +10,7 @@ L’analisi condotta nei capitoli precedenti mostra che JHipster non impone una 
 \section{Limiti dello studio e minacce alla validità}
 \label{sec:evaluation-validity}
 
-Come in ogni studio empirico, i risultati ottenuti devono essere interpretati considerando alcune possibili minacce alla validità di esso.
+Come in ogni studio empirico, i risultati ottenuti devono essere interpretati considerando alcune possibili minacce alla validità dello studio.
 
 \begin{itemize}
 	\item \textbf{Validità esterna}.  
@@ -32,7 +32,7 @@ Nonostante queste limitazioni, il caso di studio fornisce evidenze concrete su c
 \section{Sistema di testing adottato}
 \label{sec:evaluation-testing-system}
 
-Il caso di studio ha portato alla costruzione di un sistema di testing multilivello che combina strumenti e strategie di verifica differenti. L’obiettivo non è stato soltanto aumentare la copertura del codice, ma integrare diversi tipi di test in modo complementare, in modo da intercettare problemi a differenti livelli dell’applicazione.
+Il caso di studio ha portato alla costruzione di un sistema di testing multilivello che combina strumenti e strategie di verifica differenti. L’obiettivo non è stato soltanto aumentare la copertura del codice, ma integrare diversi tipi di test in modo complementare, così da intercettare problemi a differenti livelli dell’applicazione.
 
 \begin{table}[H]
 	\centering
@@ -53,7 +53,7 @@ Il caso di studio ha portato alla costruzione di un sistema di testing multilive
 	\end{tabular}
 \end{table}
 
-Questo approccio stratificato consente di individuare problemi a diversi gradi di granularità. I test più rapidi intercettano regressioni locali e problemi di implementazione, mentre i test end-to-end verificano il comportamento complessivo dell'applicazione dal punto di vista dell'utente.
+Questo approccio stratificato consente di individuare problemi a diversi livelli di granularità. I test più rapidi intercettano regressioni locali e problemi di implementazione, mentre i test end-to-end verificano il comportamento complessivo dell'applicazione dal punto di vista dell'utente.
 
 \section{Caratterizzazione quantitativa del progetto}
 \label{sec:evaluation-project-metrics}
@@ -88,24 +88,24 @@ Dal punto di vista del Test-Driven Development, JHipster offre un contesto favor
 
 Il framework genera automaticamente una suite iniziale di test che copre principalmente le operazioni CRUD, la serializzazione JSON e alcuni controlli di validazione. Questi test non derivano da un processo TDD in senso stretto, ma costituiscono una prima rete di sicurezza che consente di modificare l’applicazione con un rischio ridotto di regressioni.
 
-Nel caso di studio, il TDD è stato applicato soprattutto durante l’evoluzione dell’applicazione, quando sono state introdotte funzionalità non previste dallo scaffolding iniziale. In questi casi il flusso di sviluppo ha seguito un approccio iterativo: definizione di un test di integrazione o di uno scenario comportamentale e successiva implementazione della logica necessaria per soddisfarlo.
+Nel caso di studio, il TDD è stato applicato principalmente durante l’evoluzione dell’applicazione, quando sono state introdotte funzionalità non previste dallo scaffolding iniziale. In questi casi il flusso di sviluppo ha seguito un approccio iterativo: definizione di un test di integrazione o di uno scenario comportamentale e successiva implementazione della logica necessaria per soddisfarlo.
 
-Un aspetto osservato riguarda la copertura dei test generati automaticamente. Gran parte del backend viene verificata tramite test di integrazione, mentre i test unitari puri risultano meno diffusi. Questo approccio privilegia la verifica del comportamento complessivo delle API piuttosto che il testing isolato delle singole classi.
+Un aspetto osservato riguarda la copertura dei test generati automaticamente. Gran parte del backend viene verificata tramite test di integrazione, mentre i test unitari puri risultano meno diffusi, evidenziando una preferenza per la verifica del comportamento complessivo delle API rispetto al testing isolato delle singole classi.
 
-Un ulteriore limite osservato riguarda la copertura effettiva di alcune classi dell'applicazione. In particolare, diverse componenti generate automaticamente dal framework o appartenenti ai livelli infrastrutturali non sono coperte da test unitari specifici. Di conseguenza, tali classi risultano escluse dall’analisi di mutation testing effettuata con PIT, poiché i mutanti introdotti in queste porzioni di codice non vengono esercitati dalla suite di test. Questo fenomeno evidenzia come la presenza di test generati automaticamente non garantisca una copertura completa dell’intero codice applicativo e richieda l’introduzione di test mirati qualora si voglia aumentare la robustezza complessiva della suite.
+Un ulteriore limite osservato riguarda la copertura effettiva di alcune classi dell'applicazione. In particolare, diverse componenti generate automaticamente dal framework o appartenenti ai livelli infrastrutturali non sono coperte da test unitari specifici. Di conseguenza, tali classi risultano escluse dall’analisi di mutation testing effettuata con PIT, poiché i mutanti introdotti in queste porzioni di codice non vengono esercitati dalla suite di test. Questo fenomeno evidenzia come la presenza di test generati automaticamente non garantisca una copertura completa dell’intero codice applicativo, richiedendo l’introduzione di test mirati per aumentare la robustezza complessiva della suite.
 
 Nel complesso, JHipster non può essere considerato un framework \emph{TDD-first}, ma fornisce una base fortemente predisposta alla testabilità e alla scrittura di test successivi allo scaffolding iniziale.
 
-\section{Supporto al Behavior-Driven Development e ai test E2E}
+\section{Supporto al Behavior-Driven Development e ai test end-to-end}
 \label{sec:evaluation-bdd}
 
 Il supporto al Behavior-Driven Development risulta meno diretto. JHipster non genera automaticamente una suite significativa di scenari comportamentali, ma l’integrazione con Spring Boot consente di utilizzare strumenti come Cucumber senza particolari difficoltà.
 
 Nel caso di studio, gli scenari BDD sono stati utilizzati principalmente per descrivere comportamenti funzionali dell’applicazione e verificare l’interazione tra diversi componenti del sistema.
 
-il BDD ha avuto soprattutto un ruolo complementare. Da un lato, ha mostrato la fattibilità dell’integrazione; dall’altro, ha evidenziato che il beneficio di tale approccio dipende fortemente dal contesto organizzativo. In un progetto sviluppato individualmente, infatti, il valore aggiunto del BDD tende a ridursi.
+Il BDD ha avuto soprattutto un ruolo complementare. Da un lato, ha mostrato la fattibilità dell’integrazione; dall’altro, ha evidenziato che il beneficio di tale approccio dipende fortemente dal contesto organizzativo. In un progetto sviluppato individualmente, infatti, il valore aggiunto del BDD tende a ridursi.
 
-Un ruolo particolarmente importante è stato svolto dai test end-to-end realizzati con Cypress. A differenza dei test unitari frontend, che verificano il comportamento interno dei componenti Angular spesso attraverso meccanismi di mocking, i test E2E permettono di osservare direttamente il comportamento dell’interfaccia utente.
+Un ruolo particolarmente importante, nel caso di studio, è stato svolto dai test end-to-end realizzati con Cypress. A differenza dei test unitari frontend, che verificano il comportamento interno dei componenti Angular spesso attraverso meccanismi di mocking, i test end-to-end permettono di osservare direttamente il comportamento dell’interfaccia utente.
 
 Nel corso dello sviluppo, questi test si sono rivelati particolarmente utili nel rilevare problemi di integrazione tra frontend e backend e difetti di interfaccia che non emergono facilmente nei test unitari.
 
@@ -125,7 +125,7 @@ Nel caso di studio è stata realizzata una pipeline Jenkins locale articolata in
 	\item costruzione dell’immagine Docker e pubblicazione in un registry locale
 \end{itemize}
 
-Questa pipeline è stata realizzata sfruttando sia gli script generati da JHipster sia strumenti DevOps standard, dimostrando come il framework sia progettato per integrarsi facilmente con infrastrutture di automazione.
+Questa pipeline è stata realizzata sfruttando sia gli script generati da JHipster sia strumenti DevOps standard, evidenziando come il framework sia progettato per integrarsi facilmente con infrastrutture di automazione.
 
 \section{Evoluzione delle metriche durante lo sviluppo}
 \label{sec:evaluation-metrics}
@@ -152,7 +152,7 @@ Per valutare l'impatto delle attività di testing e integrazione continua durant
 		Mutation score PIT & 16\% & 23\% & 20\% \\
 		Numero test backend & 43 & 71 & 72 \\
 		Numero test frontend & 59 & 87 & 81 \\
-		Numero test E2E & 8 & 12 & 12 \\
+		Numero test end-to-end & 8 & 12 & 12 \\
 		Code issues SonarQube & 5 & 5 & 19 \\
 		\hline
 	\end{tabular}
@@ -184,5 +184,5 @@ Dal punto di vista del testing frontend, i test unitari basati su Jest utilizzan
 
 Per quanto riguarda la Continuous Integration, JHipster offre una base molto solida grazie alla presenza di configurazioni Docker e script di build già pronti per l’esecuzione in ambienti CI. Tuttavia, la realizzazione di una pipeline articolata richiede comunque una buona conoscenza degli strumenti DevOps coinvolti.
 
-Nel complesso, il caso di studio mostra che JHipster rappresenta una piattaforma efficace per sviluppare applicazioni web complete e integrare pratiche orientate alla qualità del software. Il framework riduce notevolmente il tempo necessario per avviare un progetto e fornisce un ecosistema tecnologico coerente, ma richiede una fase iniziale di apprendimento per comprendere pienamente il funzionamento dei framework sottostanti.
+Nel complesso, il caso di studio mostra che JHipster rappresenta una piattaforma efficace per sviluppare applicazioni web complete e integrare pratiche orientate alla qualità del software. Il framework riduce notevolmente il tempo necessario per avviare un progetto e fornisce un ecosistema tecnologico coerente, ma richiede una fase iniziale di apprendimento significativa per comprendere pienamente il funzionamento dei framework sottostanti.
 
